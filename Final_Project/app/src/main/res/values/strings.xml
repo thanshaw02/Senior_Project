@@ -7,4 +7,6 @@
     <string name="terrain">Terrain</string>
     <string name="none">None</string>
     <string name="add_marker">Add Marker</string>
+    <string name="marquette">Marquette</string>
+    <string name="melbourne">Melbourne</string>
 </resources>

@@ -5,16 +5,16 @@
     tools:context=".MapsActivity">
 
     <item
-        android:id="@+id/normal_map"
-        android:title="@string/normal"
+        android:id="@+id/jump_to_marquette"
+        android:title="@string/marquette"
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/hybrid_map"
-        android:title="@string/hybrid"
+        android:id="@+id/jump_to_melbourne"
+        android:title="@string/melbourne"
         app:showAsAction="never"/>
 
-    <item
+    <!-- <item
         android:id="@+id/satellite_map"
         android:title="@string/satellite"
         app:showAsAction="never"/>
@@ -28,5 +28,5 @@
         android:id="@+id/none_map"
         android:title="@string/none"
         app:showAsAction="never"/>
-
+-->
 </menu>
