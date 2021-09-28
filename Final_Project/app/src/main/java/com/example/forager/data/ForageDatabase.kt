@@ -11,9 +11,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.forager.model.Forager
+import com.example.forager.model.ForagerTypeConverter
 
 @Database(entities = [Forager::class], version = 1, exportSchema = false)
+@TypeConverters(ForagerTypeConverter::class)
 abstract class ForageDatabase : RoomDatabase() {
 
     abstract fun forageDao(): ForageDao

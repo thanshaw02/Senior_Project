@@ -7,6 +7,7 @@ import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -18,10 +19,11 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.example.forager.databinding.ActivityMapsBinding
 import com.example.forager.misc.CameraAndViewport
 import com.example.forager.misc.TypeAndStyles
-import com.google.android.gms.maps.model.MapStyleOptions
+import com.example.forager.fragments.PlantFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.lang.Exception
+
+private const val LOG = "MapsActivity"
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -40,15 +42,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         setContentView(binding.root)
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        binding.addMarkerBtn.setOnClickListener {
+            Toast.makeText(this, "You clicked the add button!", Toast.LENGTH_SHORT).show()
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.constraint_layout_container)
+            Log.d(LOG, "Creating a new fragment: $currentFragment")
+
+            if(currentFragment == null) {
+                val fragment = PlantFragment.newInstance()
+                supportFragmentManager.beginTransaction().add(R.id.constraint_layout_container, fragment).commit()
+            }
+        }
     }
 
     // This method is called when there is a menu
-    // We are overriding the function here
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-       menuInflater.inflate(R.menu.map_types_menu, menu)
+        menuInflater.inflate(R.menu.map_types_menu, menu)
         return true
     }
 
@@ -64,44 +75,57 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
-        // Finds the minimum and maximum zoom for the device the app is being viewed on
-        val minZoom = map.minZoomLevel
-        val maxZoom = map.maxZoomLevel
+        map.setOnMapLongClickListener {
+            map.addMarker(MarkerOptions().position(it).title("You're new position!"))
+            Toast.makeText(this, "You're marker's position is: ${it.longitude}, ${it.latitude}", Toast.LENGTH_SHORT).show()
+        }
 
         // Add a marker in Sydney and move the camera
         val marquette = LatLng(46.5436, -87.3954)
         val newYork = LatLng(40.71614203933524, -74.0040676650565)
-        map.addMarker(MarkerOptions().position(marquette).title("Marquette Marker"))
+        val marquetteMarker = map.addMarker(MarkerOptions().position(marquette).title("Marquette Marker")) // assigning this marker to a variable so we can change the markers settings
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(marquette, 10f))
         //map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraAndViewport.marquette))
         typeAndStyles.setMapStyle(map, this) // Sets the style of my map using raw JSON
         map.uiSettings.apply {
             isZoomControlsEnabled = true
         }
+    }
+}
+
+/*
+
+
+lifecycleScope.launch {
+            delay(4000L)
+            marquetteMarker.remove()
+        }
+
+
 
         onMapClicked()
         onMapLongClicked()
-    }
 
-    private fun onMapClicked() {
+private fun onMapClicked() {
         map.setOnMapClickListener {
             val latLong = it.latitude.toString() + ", " + it.longitude.toString()
-            Toast.makeText(this, "Short click on: $latLong", Toast.LENGTH_SHORT).show()
+            val toast = Toast.makeText(this@MapsActivity, "Short click on: $latLong", Toast.LENGTH_SHORT)
+            toast.setGravity(Gravity.TOP, 50, 50)
+            toast.show()
         }
     }
 
     private fun onMapLongClicked() {
         map.setOnMapLongClickListener {
             map.addMarker(MarkerOptions().position(it).title("Your new marker!"))
-            grav.apply {
-                Toast.makeText(this@MapsActivity, "New marker at: ${it.longitude}, ${it.longitude}", Toast.LENGTH_SHORT).show()
-            }
+            val toast = Toast.makeText(this@MapsActivity, "New marker at: ${it.longitude}, ${it.longitude}", Toast.LENGTH_SHORT)
+            toast.setGravity(Gravity.TOP, 50, 50)
+            toast.show()
 
         }
     }
-}
 
-/*
+
 map.uiSettings.apply {
     isZoomControlsEnabled = true
     // I think I want this enabled, need to come back to this

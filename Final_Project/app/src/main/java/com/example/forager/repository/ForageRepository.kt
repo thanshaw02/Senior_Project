@@ -29,4 +29,8 @@ class ForageRepository(private val forageDao: ForageDao) {
 */
     suspend fun deleteAllPlants() = forageDao.deleteAllPlants()
 
+    companion object {
+
+    }
+
 }

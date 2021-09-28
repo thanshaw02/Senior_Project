@@ -11,6 +11,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.*
 
 @Entity(tableName = "my_table")
 data class Forager (
@@ -18,6 +19,6 @@ data class Forager (
     val id: Int,
     @ColumnInfo(name = "scientific_name") val sName: String,
     @ColumnInfo(name = "common_name") val cName: String,
-    @Embedded val date: Date? = null,
+    @ColumnInfo(name = "date_found") val date: Date = Date(),
     @ColumnInfo(name = "num_found") val numFound: Int,
 )
