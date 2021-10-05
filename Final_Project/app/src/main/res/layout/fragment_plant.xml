@@ -1,81 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
-    android:id="@+id/plant_creation_constraint"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="30dp"
-    android:background="@color/transp">
+    android:layout_margin="25dp"
+    android:background="@drawable/ui_background"
+    tools:context=".MapsActivity">
+
+    <TextView
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="100dp"
+        android:text="What did you find?"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@+id/plant_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.505"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
-        android:id="@+id/plant_details"
-        android:layout_width="wrap_content"
+        android:id="@+id/plant_name"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:background="@android:color/transparent"
-        android:hint="Enter plant description"
-        android:lines="4"
-        android:maxLength="20"
-        android:maxLines="10"
+        android:layout_marginTop="210dp"
+        android:lines="1"
+        android:textSize="15sp"
+        android:hint="Plant Name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/plant_date" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/search_btn"
-        android:layout_width="38dp"
-        android:layout_height="41dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="144dp"
-        android:background="@drawable/rounded_corners_btn"
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="210dp"
+        android:layout_marginStart="3dp"
         android:text="?"
+        android:background="@drawable/genaric_button_style_dark"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/plant_name"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/plant_date"
-        android:layout_width="wrap_content"
+        android:id="@+id/plant_details"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Date found"
-        android:inputType="date"
-        android:paddingLeft="50dp"
-        android:paddingRight="50dp"
+        android:layout_marginTop="15dp"
+        android:hint="Plant Details"
+        android:lines="10"
+        android:maxLines="15"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/plant_name" />
 
-    <Button
-        android:id="@+id/submit_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/add_plant_button"
+        android:layout_width="75dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="35dp"
         android:text="Submit"
+        android:background="@drawable/genaric_button_style"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.512"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/plant_details" />
-
-    <EditText
-        android:id="@+id/plant_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="144dp"
-        android:hint="Enter plant name"
-        android:inputType="text"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

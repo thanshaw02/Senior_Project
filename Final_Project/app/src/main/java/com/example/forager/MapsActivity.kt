@@ -48,12 +48,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         binding.addMarkerBtn.setOnClickListener {
             Toast.makeText(this, "You clicked the add button!", Toast.LENGTH_SHORT).show()
             val currentFragment = supportFragmentManager.findFragmentById(R.id.constraint_layout_container)
-            Log.d(LOG, "Creating a new fragment: $currentFragment")
 
             if(currentFragment == null) {
                 val fragment = PlantFragment.newInstance()
                 supportFragmentManager.beginTransaction().add(R.id.constraint_layout_container, fragment).commit()
             }
+            binding.addMarkerBtn.isEnabled = false
         }
     }
 

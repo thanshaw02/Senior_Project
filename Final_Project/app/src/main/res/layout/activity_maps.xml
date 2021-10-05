@@ -29,16 +29,15 @@
         android:layout_height="match_parent"
         tools:context=".MapsActivity"/>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/add_marker_btn"
-        style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginBottom="70dp"
+        android:background="@drawable/genaric_button_style"
         android:text="@string/add_btn"
         map:layout_constraintBottom_toBottomOf="@+id/map"
         map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintStart_toStartOf="parent"
-        android:background="@drawable/rounded_corners_btn" />
+        map:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
