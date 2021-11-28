@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <item android:title="General" android:checkableBehavior="single">
+            <menu>
+                <item
+                    android:id="@+id/fragment_map"
+                    android:title="@string/home"
+                    android:icon="@drawable/home_menu_icon"/>
+
+                <item
+                    android:id="@+id/fragment_groups"
+                    android:title="@string/groups"
+                    android:icon="@drawable/groups_menu_icon"/>
+
+                <item
+                    android:id="@+id/fragment_profile"
+                    android:title="@string/profile"
+                    android:icon="@drawable/user_profile_menu_icon"/>
+            </menu>
+    </item>
+
+    <item android:title="@string/plants" android:checkableBehavior="single">
+            <menu>
+                <item
+                    android:id="@+id/fragment_personal_list"
+                    android:title="@string/my_plants"
+                    android:icon="@drawable/my_plants_menu_icon"/>
+
+                <item
+                    android:id="@+id/fragment_plant_database"
+                    android:title="@string/search_plants"
+                    android:icon="@drawable/search_plant_menu_icon"/>
+            </menu>
+    </item>
+
+    <item
+        android:id="@+id/log_out"
+        android:title="Sign Out"
+        android:icon="@drawable/log_out_icon"
+        android:enabled="true"/>
+
+</menu>

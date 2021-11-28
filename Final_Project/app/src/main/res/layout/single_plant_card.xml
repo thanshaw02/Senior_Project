@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Need to edit the layout to look nicer -->
+    <!-- Right now each card does not match the parents width, sadly -->
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/plant_cardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="5dp"
+        app:cardElevation="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/constraintLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/plant_image_IV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/my_plants_menu_icon" />
+
+                <TextView
+                    android:id="@+id/common_name_TV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Common Name"
+                    android:textAlignment="center"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/plant_image_IV"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/scientific_name_TV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Scientific Name"
+                    android:textSize="10sp"
+                    android:textStyle="italic"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/common_name_TV"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/expand_down"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="15dp"
+                    android:layout_weight="1"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/expand_down" />
+
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/expanded_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/constraintLayout">
+
+                <View
+                    android:id="@+id/hr_line"
+                    android:layout_width="350dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@color/black"
+                    app:layout_constraintBottom_toTopOf="@id/expanded_common_name"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/expanded_common_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Common Name"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/hr_line"
+                    tools:layout_editor_absoluteY="5dp" />
+
+                <TextView
+                    android:id="@+id/expanded_scientific_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Scientific Name"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/expanded_common_name" />
+
+                <View
+                    android:id="@+id/hr_line2"
+                    android:layout_width="250dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@color/black"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/expanded_scientific_name" />
+
+                <TextView
+                    android:id="@+id/plant_type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Plant Type:"
+                    android:textAlignment="center"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/hr_line2" />
+
+                <TextView
+                    android:id="@+id/plant_type_specific"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="10dp"
+                    android:text=""
+                    android:textAlignment="center"
+                    app:layout_constraintStart_toEndOf="@+id/plant_type"
+                    app:layout_constraintTop_toBottomOf="@id/hr_line2" />
+
+                <TextView
+                    android:id="@+id/plant_color"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Plant Color:"
+                    android:textAlignment="center"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/plant_type" />
+
+                <TextView
+                    android:id="@+id/plant_color_specific"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="10dp"
+                    android:text=""
+                    android:textAlignment="center"
+                    app:layout_constraintStart_toEndOf="@+id/plant_type"
+                    app:layout_constraintTop_toBottomOf="@id/plant_type_specific" />
+
+                <TextView
+                    android:id="@+id/plant_sun"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Sun Needed:"
+                    android:textAlignment="center"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/plant_color" />
+
+                <TextView
+                    android:id="@+id/plant_sun_specific"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="10dp"
+                    android:text=""
+                    android:textAlignment="center"
+                    app:layout_constraintStart_toEndOf="@+id/plant_type"
+                    app:layout_constraintTop_toBottomOf="@id/plant_color_specific" />
+
+                <TextView
+                    android:id="@+id/plant_height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Plant Height:"
+                    android:textAlignment="center"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/plant_sun" />
+
+                <TextView
+                    android:id="@+id/plant_height_specific"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="10dp"
+                    android:text=""
+                    android:textAlignment="center"
+                    app:layout_constraintStart_toEndOf="@+id/plant_type"
+                    app:layout_constraintTop_toBottomOf="@id/plant_sun_specific" />
+
+                <TextView
+                    android:id="@+id/users_notes_AREA"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:textAlignment="center"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.496"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/users_note" />
+
+                <TextView
+                    android:id="@+id/users_note"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="Plant Notes:"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/date_found" />
+
+                <TextView
+                    android:id="@+id/date_found"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Date Found:"
+                    android:textAlignment="center"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/plant_height" />
+
+                <TextView
+                    android:id="@+id/date_found_ET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="10dp"
+                    android:textAlignment="center"
+                    app:layout_constraintStart_toEndOf="@+id/plant_type"
+                    app:layout_constraintTop_toBottomOf="@+id/plant_height_specific" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

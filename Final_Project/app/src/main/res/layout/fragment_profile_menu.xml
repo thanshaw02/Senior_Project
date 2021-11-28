@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/soft_background">
+
+    <TextView
+        android:id="@+id/fullName_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:text="Full Name"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fullName_tv"
+        app:srcCompat="@drawable/user_profile_menu_icon" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="Profile Information"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/username_TI_layout"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        app:helperText="Username"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2">
+
+        <TextView
+            android:id="@+id/username_tv"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:text="Username Here"
+            android:textSize="20sp"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/email_TI_layout"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        app:helperText="Email"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/username_TI_layout">
+
+        <TextView
+            android:id="@+id/email_tv"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:text="Email Here"
+            android:textSize="20sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/dateCreated_TI_layout"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        app:helperText="Account Created"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/email_TI_layout">
+
+        <TextView
+            android:id="@+id/dateCreated_tv"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:text="Date account was created"
+            android:textSize="20sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/delete_account_btn"
+        style="@style/Widget.MaterialComponents.Button.TextButton.Dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:backgroundTint="@color/error_red"
+        android:text="Delete Account"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dateCreated_TI_layout" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

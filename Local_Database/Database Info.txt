@@ -1,0 +1,10 @@
+Plant Type:
+ - 0 means it is a Wildflower
+ - 1 Means it is a Fern
+ - 2 Means it is a Tree/Shrub/Vine
+ - 3 Means it is a Grasses, Sedges, Rushes
+
+Sun:
+ - 0 needs full sun but no partial or shade
+ - 1 needs partial sun, but no full and shade
+ - 3 needs shade sun, but no partial or full

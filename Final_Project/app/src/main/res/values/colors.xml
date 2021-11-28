@@ -10,4 +10,35 @@
     <color name="transparent_ui">#BF78909C</color>
     <color name="input_text_shadow">#7F000000</color>
     <color name="fully_transparent">#000000</color>
+    <color name="error_red">#FF9494</color>
+    <color name="eggshell">#f0ead6</color>
+
+    <!-- Theme colors -->
+    <!--?xml version="1.0" encoding="UTF-8"?-->
+    <color name="primaryColor">#aade9a</color>
+    <color name="primaryLightColor">#ddffcb</color>
+    <color name="primaryDarkColor">#7aac6b</color>
+    <color name="secondaryColor">#37a187</color>
+    <color name="secondaryLightColor">#6dd3b7</color>
+    <color name="secondaryDarkColor">#00725a</color>
+    <color name="primaryTextColor">#000000</color>
+    <color name="secondaryTextColor">#000000</color>
+
+    <color name="soft_background">#ececec</color>
+    <color name="regular_background">#bababa</color> <!-- Or try -> #dddddd -->
+
+    <!-- OLD COLORS
+    <color name="primaryColor">#66bb6a</color>
+    <color name="primaryLightColor">#98ee99</color>
+    <color name="primaryDarkColor">#338a3e</color>
+    <color name="secondaryColor">#00897b</color>
+    <color name="secondaryLightColor">#4ebaaa</color>
+    <color name="secondaryDarkColor">#005b4f</color>
+    <color name="primaryTextColor">#000000</color>
+    <color name="secondaryTextColor">#000000</color>
+    -->
+
+    <!-- Navigation colors -->
+    <color name="light_gray">#989797</color>
+    <color name="divider">#D8D6D6</color>
 </resources>

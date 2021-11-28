@@ -3,11 +3,177 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/my_nav"
-    app:startDestination="@id/mapsActivity">
+    app:startDestination="@id/fragment_map">
 
-    <activity
-        android:id="@+id/mapsActivity"
-        android:name="com.example.forager.MapsActivity"
-        android:label="activity_maps"
-        tools:layout="@layout/activity_maps" />
+    <!-- TODO: Change all of the action ID's to "navigate_to_FRAGMENT_NAME" -->
+
+    <fragment
+        android:id="@+id/fragment_map"
+        android:name="com.example.forager.fragments.MapsFragment"
+        android:label=""
+        tools:layout="@layout/fragment_maps" >
+        <action
+            android:id="@+id/action_mapsFragment_to_foundPlantFormFragment"
+            app:destination="@id/fragment_found_plant"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/navigate_to_profile_menu"
+            app:destination="@id/fragment_profile"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_mapsFragment_to_plantDatabaseFragment"
+            app:destination="@id/fragment_plant_database"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_mapsFragment_to_personalPlantListFragment"
+            app:destination="@id/fragment_personal_list"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_mapsFragment_to_groupsFragment"
+            app:destination="@id/fragment_groups"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_found_plant"
+        android:name="com.example.forager.fragments.FoundPlantFormFragment"
+        android:label=""
+        tools:layout="@layout/fragment_found_plant_form">
+        <action
+            android:id="@+id/action_foundPlantFormFragment_to_mapsFragment"
+            app:destination="@id/fragment_map"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_foundPlantFormFragment_to_personalPlantListFragment"
+            app:destination="@id/fragment_personal_list"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_foundPlantFormFragment_to_fragmentProfileMenu"
+            app:destination="@id/fragment_profile"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_foundPlantFormFragment_to_plantDatabaseFragment"
+            app:destination="@id/fragment_plant_database"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_foundPlantFormFragment_to_groupsFragment"
+            app:destination="@id/fragment_groups"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_profile"
+        android:name="com.example.forager.fragments.FragmentProfileMenu"
+        android:label=""
+        tools:layout="@layout/fragment_profile_menu">
+        <action
+            android:id="@+id/action_fragmentProfileMenu_to_plantDatabaseFragment"
+            app:destination="@id/fragment_plant_database"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_fragmentProfileMenu_to_mapsFragment"
+            app:destination="@id/fragment_map"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_fragmentProfileMenu_to_groupsFragment"
+            app:destination="@id/fragment_groups"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_personal_list"
+        android:name="com.example.forager.fragments.PersonalPlantListFragment"
+        android:label=""
+        tools:layout="@layout/fragment_personal_plant_list" >
+        <action
+            android:id="@+id/action_personalPlantListFragment_to_mapsFragment"
+            app:destination="@id/fragment_map"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_personalPlantListFragment_to_plantDatabaseFragment"
+            app:destination="@id/fragment_plant_database"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_personalPlantListFragment_to_fragmentProfileMenu"
+            app:destination="@id/fragment_profile"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_personalPlantListFragment_to_groupsFragment"
+            app:destination="@id/fragment_groups"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_plant_database"
+        android:name="com.example.forager.fragments.PlantDatabaseFragment"
+        android:label=""
+        tools:layout="@layout/fragment_plant_database">
+        <action
+            android:id="@+id/action_plantDatabaseFragment_to_personalPlantListFragment"
+            app:destination="@id/fragment_personal_list"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_plantDatabaseFragment_to_fragmentProfileMenu"
+            app:destination="@id/fragment_profile"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_plantDatabaseFragment_to_mapsFragment"
+            app:destination="@id/fragment_map"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_plantDatabaseFragment_to_groupsFragment"
+            app:destination="@id/fragment_groups"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_groups"
+        android:name="com.example.forager.fragments.GroupsFragment"
+        android:label=""
+        tools:layout="@layout/fragment_groups" >
+        <action
+            android:id="@+id/action_groupsFragment_to_mapsFragment"
+            app:destination="@id/fragment_map"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_groupsFragment_to_fragmentProfileMenu"
+            app:destination="@id/fragment_profile"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_groupsFragment_to_plantDatabaseFragment"
+            app:destination="@id/fragment_plant_database"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_groupsFragment_to_personalPlantListFragment"
+            app:destination="@id/fragment_personal_list"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
 </navigation>

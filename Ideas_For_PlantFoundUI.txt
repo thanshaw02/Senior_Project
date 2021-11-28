@@ -1,0 +1,8 @@
+Plant Selection UI:
+
+Plant Name: 
+	- They can start typeing the common name in and it will sort of autofill the rest for them based onn what they are type??
+	- Also have a button to the left of the ET that allows them to open up the local database and choose that way??
+
+Plant notes??:
+	- Possibly let the user leave some notes about their find??

@@ -1,95 +1,234 @@
+/**
+ *  TODO: Color theme: https://material.io/resources/color/#!/?view.left=0&view.right=1&primary.color=aade9a&secondary.color=37a187
+ *  TODO: Also, I need to start migrating everything over to my "HomeViewModel" like the two PlantLists
+ *  TODO: Also need to remove the PlantListsAc
+ */
+
+/**
+ * TODO: I'm going back to manually setting the menu drawer up with clicks and using the navigation graph
+ * TODO: DO NOT use NavigationUI, I don't really like it and it makes it tough to pass data between the fragments..
+ */
+
 package com.example.forager
 
+import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.Gravity
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.Toast
-import androidx.fragment.app.FragmentActivity
+import android.widget.TextView
+import androidx.activity.viewModels
+import androidx.core.view.GravityCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.isVisible
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-
-import com.google.android.gms.maps.CameraUpdateFactory
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.example.forager.databinding.ActivityMapsBinding
-import com.example.forager.misc.CameraAndViewport
-import com.example.forager.misc.TypeAndStyles
-import com.example.forager.fragments.PlantFragment
+import com.example.forager.databinding.ForagerNavigationHeaderBinding
+import com.example.forager.fragments.*
+import com.example.forager.oldcode.misc.CameraAndViewport
+import com.example.forager.oldcode.misc.TypeAndStyles
+import com.example.forager.remotedata.User
+import com.example.forager.repository.MyCallback
+import com.example.forager.repository.login.LoginActivity
+import com.example.forager.splashscreens.SplashScreenFragment
+import com.google.firebase.auth.FirebaseAuth
+import com.example.forager.viewmodel.HomeViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.*
 
-private const val LOG = "MapsActivity"
+private const val LOG = "MapsActivityDEBUG"
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity :  AppCompatActivity() {
 
-    private lateinit var map: GoogleMap
+    // Menu drawer header widgets
+    private lateinit var menuHeaderPlantsFound: TextView
+
     private lateinit var binding: ActivityMapsBinding
 
-    private val typeAndStyles by lazy { TypeAndStyles() }
-    private val  cameraAndViewport by lazy { CameraAndViewport() }
+    // Menu widgets
+    private lateinit var navHeader: ForagerNavigationHeaderBinding
+    private lateinit var menuLayout: DrawerLayout
+    private lateinit var menuNavView: NavigationView
 
-    private val grav by lazy { Gravity() }
+    // Creating an instance of FriebaseAuth which will hold on to whoever has logged in
+    private lateinit var auth: FirebaseAuth
+    private lateinit var currentUser: User
+    private lateinit var numPlantsFound: String
+
+    private val numPlantsObserver = Observer<String> {
+        Log.d(LOG, "Observation made on number of plants..: $it")
+        numPlantsFound = it
+    }
+
+    private val userObserver = Observer<User> {
+        Log.d(LOG, "User has been updated: $it")
+        currentUser = it!!
+        numPlantsFound = currentUser.numPlantsFound
+    }
+
+    // ViewModel
+    private val homeVM by viewModels<HomeViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        // Menu drawer logic
+        navHeader = ForagerNavigationHeaderBinding.inflate(layoutInflater)
+        menuLayout = binding.drawerLayout
+        menuNavView = binding.myNavigationView
+        val menuBtn = findViewById<MaterialToolbar>(R.id.nav_bar)
 
-        binding.addMarkerBtn.setOnClickListener {
-            Toast.makeText(this, "You clicked the add button!", Toast.LENGTH_SHORT).show()
-            val currentFragment = supportFragmentManager.findFragmentById(R.id.constraint_layout_container)
+        // This observes any changes made to the user's plant count
+        homeVM.getTheNumOfPlants.observeForever(numPlantsObserver)
 
-            if(currentFragment == null) {
-                val fragment = PlantFragment.newInstance()
-                supportFragmentManager.beginTransaction().add(R.id.constraint_layout_container, fragment).commit()
+        // This retrieves the user's data (full name, username, date account was created, etc.)
+        homeVM.getUserLiveData.observe(this, userObserver)
+
+        // This is for keep my app in "full screen" mode, sort of
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        homeVM.localDataInit(this) // Initializing local data (mainly for the auto-complete feature)
+
+        auth = FirebaseAuth.getInstance()
+
+        // This is to update the mini user area in my menu drawer
+        // The first time the menu is opened everything is initialized (full name, username, num plants found)
+        // All other times only the amount of plants found is updated
+        menuBtn.setNavigationOnClickListener {
+            Log.d(LOG, "User's \"numPlantsFound\": ${currentUser.numPlantsFound}")
+            menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+            if(homeVM.getFirstTimeClicking) {
+                Log.d(LOG, "Menu button pressed.. first time clicking: true")
+                val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
+                val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
+                menuHeaderFullName.text = currentUser.fullName
+                menuHeaderUserName.text = currentUser.userName
+                menuHeaderPlantsFound.text = numPlantsFound
+                homeVM.setFirstTimeClick(false)
             }
-            binding.addMarkerBtn.isEnabled = false
+            else menuHeaderPlantsFound.text = numPlantsFound
+            menuLayout.openDrawer(GravityCompat.START) // Opens the menu when pressed
+        }
+
+        menuNavView.setNavigationItemSelectedListener { menuItem ->
+            menuLayout.closeDrawer(GravityCompat.START)
+            goToMenuItem(menuItem.itemId)
+            true
+        }
+
+        // Opens "fragment_map" when the user logs in
+        attachFragment(MapsFragment.newInstance(), "fragment_map")
+
+    }
+
+    // Utility function for fragment navigation
+    // Allows the user to move to different fragments without having to recreate them
+    // Allows for a more fluid UX
+    private fun attachFragment(fragment: Fragment?, tag: String) {
+        val manager = supportFragmentManager
+        val ft = manager.beginTransaction()
+        if(tag == "splash_screen") { // May not keep this part of the code, used for the splash screen
+            ft.add(R.id.fragment_container, fragment!!, "splash_screen")
+            ft.commit()
+        }
+        else {
+            if(manager.findFragmentByTag(tag) == null) {
+                ft.add(R.id.fragment_container, fragment!!, tag)
+                ft.addToBackStack(tag)
+                ft.commit()
+            }
+            else {
+                for(frag in manager.fragments) {
+                    ft.hide(frag)
+                }
+                ft.show(manager.findFragmentByTag(tag)!!).commit()
+            }
         }
     }
 
-    // This method is called when there is a menu
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.map_types_menu, menu)
-        return true
+    // Handles navigation between fragments via my menu drawer and my navigation graph
+    // Trying to show/hide fragments if they are a;ready in the back stack??
+    private fun goToMenuItem(menuId: Int) {
+        when(menuId) {
+            R.id.fragment_map -> attachFragment(MapsFragment.newInstance(), "fragment_map")
+            R.id.fragment_groups -> {
+                // If I have time I will come back to this
+            }
+            R.id.fragment_profile -> attachFragment(FragmentProfileMenu.newInstance(), "fragment_profile")
+            R.id.fragment_personal_list -> attachFragment(PersonalPlantListFragment.newInstance(), "fragment_personal_list")
+            R.id.fragment_plant_database -> attachFragment(PlantDatabaseFragment.newInstance(), "fragment_plant_database")
+            R.id.log_out -> logOut()
+        }
     }
 
-    // This is for the menu that changes the map type
-    // This will not go in my release version!
-    // Just here for practice purposes
-    // Although I may use something like this for other features
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        typeAndStyles.setMapType(item, map)
-        return true
+    // I don't think I need to send an intent to my login page
+    // I also don't need to receive and intent, because FirebaseAuth will hold the current user that's already signed in
+    private fun logOut() {
+        homeVM.logout()
+        goToLogin()
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
-
-        map.setOnMapLongClickListener {
-            map.addMarker(MarkerOptions().position(it).title("You're new position!"))
-            Toast.makeText(this, "You're marker's position is: ${it.longitude}, ${it.latitude}", Toast.LENGTH_SHORT).show()
+    companion object {
+        fun newInstance(context: Context): Intent {
+            return Intent(context, MapsActivity::class.java)
         }
+    }
 
-        // Add a marker in Sydney and move the camera
-        val marquette = LatLng(46.5436, -87.3954)
-        val newYork = LatLng(40.71614203933524, -74.0040676650565)
-        val marquetteMarker = map.addMarker(MarkerOptions().position(marquette).title("Marquette Marker")) // assigning this marker to a variable so we can change the markers settings
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(marquette, 10f))
-        //map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraAndViewport.marquette))
-        typeAndStyles.setMapStyle(map, this) // Sets the style of my map using raw JSON
-        map.uiSettings.apply {
-            isZoomControlsEnabled = true
+    override fun onResume() {
+        super.onResume()
+        Log.d(LOG, "onResume() called")
+
+        // Checking to see if there is a current user (if someone is logged in)
+        if(auth.currentUser == null) {
+            goToLogin()
         }
+    }
+
+    private fun goToLogin() {
+        viewModelStore.clear() // This is supposed to clear all data held in my HomeViewModel
+        val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    override fun onStart() {
+        Log.d(LOG, "onStart() called")
+        super.onStart()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        homeVM.getTheNumOfPlants.removeObserver(numPlantsObserver)
+        Log.d(LOG, "onDestroy() called")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(LOG, "onPause() called")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(LOG, "onStop() called")
     }
 }
 
