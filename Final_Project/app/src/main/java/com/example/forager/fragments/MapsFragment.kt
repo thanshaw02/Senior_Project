@@ -1,66 +1,102 @@
 package com.example.forager.fragments
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
 import androidx.fragment.app.Fragment
-
 import android.os.Bundle
-import android.os.Handler
-import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
+import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
+import com.example.forager.FileDirectory
 import com.example.forager.R
-import com.example.forager.fragments.FoundPlantFormFragment
-import com.example.forager.oldcode.misc.TypeAndStyles
-import com.example.forager.remotedata.PlantListNode
-import com.example.forager.remotedata.User
-import com.example.forager.repository.DataRepository
 import com.example.forager.repository.MyCallback
-import com.example.forager.repository.login.LoginActivity
 import com.example.forager.viewmodel.HomeViewModel
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.launch
-import java.lang.Exception
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 private const val LOG = "MapsFragment"
 
+/**
+ * MapsFragment fragment that displays the Google Map for the user.
+ * User may 'pin' locations of found plants with a 'long press', when doing so an AlertDialog window
+ * will be displayed asking for the needed plant information.
+ *
+ * Use the [MapsFragment.newInstance] companion object method to create an instance of this fragment.
+ *
+ * @see [HomeViewModel.getNumberOfPlantsFound]
+ *
+ * @author Tylor J. Hanshaw
+ */
 class MapsFragment : Fragment() {
+
+    private lateinit var imageTEST: ImageView
+
+    // Directory where the photos will be saved
+    private lateinit var photoDir: File
+
+    private lateinit var photoTakenBM: Bitmap
+    private var photoTakenFile: File? = null
+    private lateinit var fileDir: FileDirectory
+
+    // For camera operations
+    // This works!!
+    // TODO: App crashes when trying to add the bitmap to my Realtime Database
+    private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if(result.resultCode == Activity.RESULT_OK) {
+            photoTakenFile = photoDir.absoluteFile
+        }
+        else {
+            Snackbar.make(requireView(), "The photo was not properly received.", Snackbar.LENGTH_SHORT).show()
+        }
+    }
 
     private var numPlantsFound = 0
 
     private lateinit var toggleBtn: SwitchMaterial
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        fileDir = context as FileDirectory
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+    }
+
+    /**
+     * Private variable that lazily assigns MapsActivity's ViewModel.
+     * @see com.example.forager.MapsActivity
+     */
     private val homeVM by activityViewModels<HomeViewModel>()
 
-    // This is what I'm using for the style of my map!
-    private val typeAndStyles by lazy { TypeAndStyles() }
-
+    /**
+     * Private variable of type OnMapReadyCallback
+     *
+     * @see OnMapReadyCallback
+     */
     private val callback = OnMapReadyCallback { googleMap ->
+
+        getResponseUsingCoroutine(googleMap)
 
         // This is so the zoom in/out buttons are fully visible
         googleMap.setPadding(0, 0, 0, 100)
@@ -70,21 +106,7 @@ class MapsFragment : Fragment() {
             homeVM.toggleMarkers(toggled)
         }
 
-        // This loads all of the found plants for the user on the map when first logging in
-        homeVM.getPersonalPlantListOfUsers.observe(this, { plantFoundList ->
-            if(homeVM.getHasBeenToggled) {
-                plantFoundList.forEach { plantNode ->
-                    val coord = LatLng(plantNode.lat, plantNode.long)
-                    val marker = googleMap.addMarker(MarkerOptions()
-                        .position(coord)
-                        .title(plantNode.plantAdded.commonName)
-                        .snippet(plantNode.dateFound))
-                    homeVM.addUsersCurrentMarkers(marker!!)
-                }
-                Log.d(LOG, "Number of plants found by user: $numPlantsFound")
-                homeVM.setHasBeenToggled(false)
-            }
-        })
+        getResponseUsingCoroutine(googleMap) // Come back and test this! This may be why the observer was duplicating markers..
 
         // Setting the styling of GoogleMap
         googleMap.uiSettings.apply {
@@ -105,6 +127,57 @@ class MapsFragment : Fragment() {
 
     }
 
+    // I'm using this variable to force my Livedata to only update once on startup/log in instead of twice
+    var count = 0
+
+    // This is retrieving the user's found plant list
+
+    /**
+     * Private function used to set all previous found plant markers onto the map when the user first logs in.
+     * Using the [homeVM] variable, I observe the [observeFoundPlantList][HomeViewModel.observeFoundPlantList] LiveData from HomeViewModel to load in all previously saved plant markers.
+     * As of now, I am using a crude method to make sure the [numPlantsFound] is never greater than the number of markers the user has.
+     * Currently there is a bug where [observeFoundPlantList][HomeViewModel.observeFoundPlantList] is observed twice in a row, duplicating the number of markers for the user.
+     *
+     * @param googleMap GoogleMap is passed to this function to add the markers to the map.
+     */
+    private fun getResponseUsingCoroutine(googleMap: GoogleMap) {
+        homeVM.observeFoundPlantList.observe(this, { response ->
+            response.plants?.forEach { plantNode ->
+                Log.d(LOG, "Count == $count")
+                if(count < numPlantsFound) {
+                    val coords = LatLng(plantNode.lat, plantNode.long)
+                    val marker = googleMap.addMarker(
+                        MarkerOptions()
+                            .position(coords)
+                            .title(plantNode.plantAdded.commonName)
+                            .snippet(plantNode.dateFound))
+                    homeVM.addNewMarker(marker!!)
+                    count += 1
+                    Log.d(LOG, "Iteration #${count}")
+                }
+            }
+            Log.d(LOG, "Marker count: ${homeVM.markerSize}")
+        })
+    }
+
+    /**
+     * Invoked when a 'long press' is detection on the Google Map.
+     * Once invoked an AlertDialog window is opened, and the user is prompted to enter the
+     * 'common name' of the plant they have found and some personal notes about the plant.
+     *
+     * When the user presses the 'submit' button the user's Number of Plants Found is incremented,
+     * the plant is added to the user's Personal Plant List, and the Google marker is cached
+     * locally in [HomeViewModel].
+     *
+     * Note: I'm using an AutoFillTextView in this AlertDialog view to auto-guess the plants
+     * 'common name' while the user types it in.
+     *
+     * @param coords Coordinates of plant found
+     * @param googleMap Google Map
+     * @see HomeViewModel.incrementPlantsFound
+     * @see HomeViewModel.addPlantToDB
+     * @see HomeViewModel.addNewMarker
+     */
     private fun setUpDialogBox(coords: LatLng, googleMap: GoogleMap) {
         val formatter = SimpleDateFormat("MM-dd-yyyy")
         val formattedDate = formatter.format(Calendar.getInstance().time)
@@ -113,8 +186,35 @@ class MapsFragment : Fragment() {
         val arrayAdapter: ArrayAdapter<String> = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_expandable_list_item_1,
-            homeVM.getPlantCommonName())
+            homeVM.getPlantCommonNames())
         plantName.setAdapter(arrayAdapter)
+
+        homeVM.getPhotoTakenOfPlant.observe(requireActivity(), {
+            Log.d(LOG, "A picture has been added.")
+            layout.findViewById<ImageView>(R.id.retrieved_photo).setImageBitmap(it!!)
+        })
+
+        val takePhotoBtn: ImageButton = layout.findViewById(R.id.take_photo_btn)
+        val selectPhotoBtn: ImageButton = layout.findViewById(R.id.select_photo_button)
+
+        takePhotoBtn.setOnClickListener {
+            // FileProvider allows the sharing of "content" or photo's in our case to be much more secure
+            val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val fileProvider = FileProvider.getUriForFile(requireContext(), "com.example.forager.fragments.file_provider", photoDir)
+            takePhotoIntent.apply { putExtra(MediaStore.EXTRA_OUTPUT, fileProvider) }
+            try {
+                resultLauncher.launch(takePhotoIntent)
+            } catch (e: ActivityNotFoundException) {
+                Snackbar.make(
+                    requireView(),
+                    "Error opening the Camera app: $e",
+                    Snackbar.LENGTH_SHORT).show()
+            }
+        }
+        selectPhotoBtn.setOnClickListener {
+            // Let the user select a photo from their library??
+        }
+
         val dialogBox = AlertDialog.Builder(requireContext())
         dialogBox.setCancelable(true).setView(layout)
             .setPositiveButton("Submit") {dialog, i ->
@@ -125,15 +225,18 @@ class MapsFragment : Fragment() {
                         .position(coords)
                         .title(plantName.text.toString())
                         .snippet(formattedDate))
+                    val plantNodeUid = UUID.randomUUID().toString()
+                    if(photoTakenFile != null) {
+                        homeVM.addPlantPhotoToCloudStorage(photoTakenFile!!.absoluteFile, plantNodeUid)
+                    }
                     homeVM.incrementPlantsFound(numPlantsFound)
-                    homeVM.addPlantToDB(coords, plantToAdd, plantNotes.text.toString())
+                    homeVM.addPlantToDB(
+                        coords,
+                        plantToAdd,
+                        plantNotes.text.toString(),
+                        plantNodeUid
+                    )
                     homeVM.addNewMarker(marker!!)
-
-                    // Don't want to keep this, but this is so the user's plant list will be up to date
-                    // If the user doesn't view their list before adding a plant it will go out of sync
-                    // but if they view their list before adding a plant, they are fine
-                    // I'm adding this in the hopes that it will fix this issue, temporarily
-                    homeVM.getPersonalPlantListOfUserInit()
                 }
                 else Snackbar.make(
                         requireView(),
@@ -149,18 +252,30 @@ class MapsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_maps, container, false)
 
+        imageTEST = view.findViewById(R.id.image_TEST)
+
         toggleBtn = view.findViewById(R.id.toggle_markers)
 
+        photoDir = fileDir.getOutputDirectory(homeVM.getCurrentDate())
+
         // Getting the user's number of plants found count so I can increment it when adding another plant
+        /* Made some changes here, I casted the variable passed by the callback and checked for exceptions */
         homeVM.getNumberOfPlantsFound(object: MyCallback {
-            override fun onCallback(plantsFound: String) {
-                numPlantsFound = plantsFound.toInt()
+            override fun getDataFromDB(data: Any?) {
+                val response = data as String?
+                if(response != null) {
+                    numPlantsFound = data.toString().toInt()
+                }
+                else Log.d(LOG, "Exception when loading number of plants found.")
             }
         })
 
         return view
     }
 
+    /**
+     * Overriding onViewCreated() to set up Google Map in the [Google Map Fragment][MapsFragment]
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
@@ -168,32 +283,13 @@ class MapsFragment : Fragment() {
     }
 
     companion object {
-        fun newInstance(): MapsFragment {
-            return MapsFragment()
-        }
-    }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d(LOG, "onResume() called")
-    }
-    override fun onStart() {
-        Log.d(LOG, "onStart() called")
-        super.onStart()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(LOG, "onDestroy() called")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d(LOG, "onPause() called")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d(LOG, "onStop() called")
+        /**
+         * Use this companion object method to create an instance of a [MapsFragment]
+         *
+         * @return A new instance of fragment MapsFragment
+         */
+        @JvmStatic
+        fun newInstance(): MapsFragment = MapsFragment()
     }
 }

@@ -4,25 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eggshell"
-    tools:context=".fragments.PlantDatabaseFragment">
-
-    <TextView
-        android:id="@+id/plant_DB_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Search for Plants"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    android:background="@color/soft_background"
+    tools:context=".fragments.PlantDatabaseFragment"
+    android:fitsSystemWindows="true">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/plant_database_RV"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="60dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

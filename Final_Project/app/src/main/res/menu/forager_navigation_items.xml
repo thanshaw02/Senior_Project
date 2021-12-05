@@ -12,11 +12,6 @@
                     android:icon="@drawable/home_menu_icon"/>
 
                 <item
-                    android:id="@+id/fragment_groups"
-                    android:title="@string/groups"
-                    android:icon="@drawable/groups_menu_icon"/>
-
-                <item
                     android:id="@+id/fragment_profile"
                     android:title="@string/profile"
                     android:icon="@drawable/user_profile_menu_icon"/>

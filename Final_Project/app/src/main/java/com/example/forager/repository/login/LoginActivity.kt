@@ -21,6 +21,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
 
 private const val LOG = "LoginActivity"
@@ -45,6 +46,8 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var emailText: EditText
     private lateinit var passwordText: EditText
     private lateinit var loadingAnimationView: LottieAnimationView
+
+    private var userUid: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

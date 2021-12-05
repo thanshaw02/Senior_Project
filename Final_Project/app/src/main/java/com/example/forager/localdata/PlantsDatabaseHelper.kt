@@ -11,11 +11,24 @@ import android.util.Log
 
 private const val LOG = "PlantDatabaseHelper:"
 
+/**
+ * A helper class to manage database creation and version management.
+ *
+ * @param context [Context]
+ *
+ * @author Tylor J. Hanshaw
+ */
 class PlantsDatabaseHelper(val context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
 
+    /**
+     * Companion object used to store the SQLite database name and current version.
+     *
+     * @see DB_VERSION
+     * @see DB_NAME
+     */
     companion object {
         private const val DB_VERSION = 1
-        const val DB_NAME = "Internal_Plant_DB.db"
+        const val DB_NAME = "Internal_Plant_DB_PHOTOS.db"
     }
 
     private val preferences: SharedPreferences = context.getSharedPreferences(

@@ -6,9 +6,7 @@
 
 package com.example.forager.fragments
 
-import android.content.Context
 import android.os.Bundle
-import android.transition.TransitionInflater
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -20,15 +18,19 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import com.example.forager.R
-import com.example.forager.remotedata.User
+import com.example.forager.remotedata.model.User
 import com.example.forager.repository.login.LoginActivity
 import com.example.forager.viewmodel.HomeViewModel
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
 
-private const val USER_UID = "user_UID"
+
 private const val LOG = "FragmentProfileMenu:"
 
+/**
+ * Fragment profile menu class, loads and displays user information that is read in from my RealtimeDatabase.
+ *
+ * @author Tylor J. Hanshaw
+ */
 class FragmentProfileMenu : Fragment() {
 
     // User data passed from "MapsActivity"
@@ -42,18 +44,26 @@ class FragmentProfileMenu : Fragment() {
     private lateinit var deleteAccountBtn: Button
 
     // ViewModel
+    /**
+     * Private variable that lazily assigns MapsActivity's ViewModel.
+     * @see com.example.forager.MapsActivity
+     */
     private val homeVM: HomeViewModel by activityViewModels()
 
+    /**
+     * On create function
+     *
+     * Overriding the onCreate() function, allowing the fragment to acquire the [currentUser] from HomeViewModel.
+     *
+     * @see HomeViewModel
+     * @param savedInstanceState SavedInstanceState
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(LOG, "onCreate() called")
 
-        currentUser = homeVM.getUserLiveData.value!!
-    }
-
-    // trying to postpone the transition until all data has been loaded fully
-    // This is one way to allow my data to load fully first
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        // Pulling the user's info from the LiveData in my HomeViewModel
+        currentUser = homeVM.observeUserInfo.value!!.user!!
     }
 
     override fun onCreateView(
@@ -62,6 +72,7 @@ class FragmentProfileMenu : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_profile_menu, container, false)
+        Log.d(LOG, "onCreateView() called")
 
         usersName = view.findViewById(R.id.fullName_tv)
         usersUsername = view.findViewById(R.id.username_tv)
@@ -79,9 +90,16 @@ class FragmentProfileMenu : Fragment() {
         return view
     }
 
-    // I think I found the issue!!
-    // I believe logging out does something bad when trying to delete the user
-    // Maybe have a loading screen pop up  for like 2 seconds, then log the user out??
+    // Leaving this comment here, deleting the user's account still causes issues
+    /**
+     * Private function that is invoked when the "Delete Account" button is pressed.
+     * An AlertDialog window is opened that prompts the user to re-enter their credentials before deleting their account.
+     *
+     * @param view View needed for the Snackbar text in the case the user enters incorrect login credentials.
+     */
+    // TODO: There is still a bug with the "Delete User Data" Firebase extension
+    // TODO: Seems to only be deleting users info from one of the two nodes
+    // TODO: And seems to be only deleting the first in the the "Realtime Database paths" list..
     private fun setDialog(view: View) {
         val layout = layoutInflater.inflate(R.layout.user_delete_account_alert_box, null)
         val alertBox = AlertDialog.Builder(requireContext())
@@ -94,8 +112,8 @@ class FragmentProfileMenu : Fragment() {
                 if(email.text.toString() != "" || password.text.toString() != "") {
                     homeVM.deleteUserAccount(
                         layout.findViewById<EditText>(R.id.emailET_alert).text.toString(),
-                        layout.findViewById<EditText>(R.id.passET_alert).text.toString(),
-                        FirebaseAuth.getInstance().currentUser!!)
+                        layout.findViewById<EditText>(R.id.passET_alert).text.toString()
+                    )
                     //goToLoginPage()
                 }
                 else Snackbar.make(requireContext(), view, "Please fill out the form above.", Snackbar.LENGTH_SHORT).show()
@@ -105,11 +123,21 @@ class FragmentProfileMenu : Fragment() {
         alertBox.show()
     }
 
+    /**
+     * Private function that is called in the setDialog(view: View) function when deleting the user's account.
+     * @see setDialog
+     */
     private fun goToLoginPage() {
+        Log.d(LOG, "Going to login page.. hopefully.")
         val intent = LoginActivity.newInstance(requireContext())
         startActivity(intent)
     }
 
+    /**
+     * Private function used to set the text for all widgets in the FragmentProfileMenu fragment.
+     * This function is called once in onCreate().
+     * @see FragmentProfileMenu for more information on its use.
+     */
     private fun setViewData() {
         usersName.text = currentUser.fullName
         usersUsername.text = currentUser.userName
@@ -118,6 +146,14 @@ class FragmentProfileMenu : Fragment() {
     }
 
     companion object {
+
+        /**
+         * Use this companion object method to navigate to this fragment.
+         *
+         * @see [com.example.forager.MapsActivity] for more information.
+         * @see com.example.forager.MapsActivity.goToMenuItem for its usage.
+         * @return A new instance of fragment FragmentProfileMenu
+         */
         fun newInstance(): FragmentProfileMenu = FragmentProfileMenu()
     }
 }

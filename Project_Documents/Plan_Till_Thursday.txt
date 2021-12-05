@@ -1,0 +1,9 @@
+TODO BEFORE THURSDAY (12/9/2021):
+
+	1. Change RecyclerView from a scrollable list to a scrollable grid of pictures
+		- Pictures taken by the user
+		- If the user hasn't taken a photo for a plant then use an image from my local database?
+	2. Do the same thing to the regular plant list
+	3. Fix bug where user's data doesn't fully delete when deleting their account
+	4. Make my app compatibale when turned to the side
+	5. UI, UI, AND MORE UI!!!!!!!

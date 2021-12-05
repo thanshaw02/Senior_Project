@@ -13,52 +13,46 @@ package com.example.forager
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
+import android.os.Environment
 import android.util.Log
-import android.view.Gravity
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.view.GravityCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
-import com.google.android.gms.maps.GoogleMap
 import com.example.forager.databinding.ActivityMapsBinding
 import com.example.forager.databinding.ForagerNavigationHeaderBinding
 import com.example.forager.fragments.*
-import com.example.forager.oldcode.misc.CameraAndViewport
-import com.example.forager.oldcode.misc.TypeAndStyles
-import com.example.forager.remotedata.User
-import com.example.forager.repository.MyCallback
+import com.example.forager.remotedata.model.User
 import com.example.forager.repository.login.LoginActivity
-import com.example.forager.splashscreens.SplashScreenFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.example.forager.viewmodel.HomeViewModel
-import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.switchmaterial.SwitchMaterial
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.lang.Exception
-import java.text.SimpleDateFormat
-import java.util.*
+import java.io.File
 
 private const val LOG = "MapsActivityDEBUG"
 
-class MapsActivity :  AppCompatActivity() {
+interface FileDirectory {
+    fun getOutputDirectory(fileName: String): File
+}
+
+/**
+ * Main activity that hosts all four of the main UI fragments, holds the [NavigationView] menu and
+ * handles navigation logic.
+ *
+ * @author Tylor J. Hanshaw
+ */
+class MapsActivity :  AppCompatActivity(), FileDirectory {
 
     // Menu drawer header widgets
     private lateinit var menuHeaderPlantsFound: TextView
+    private lateinit var menuTitle: TextView
 
     private lateinit var binding: ActivityMapsBinding
 
@@ -77,12 +71,6 @@ class MapsActivity :  AppCompatActivity() {
         numPlantsFound = it
     }
 
-    private val userObserver = Observer<User> {
-        Log.d(LOG, "User has been updated: $it")
-        currentUser = it!!
-        numPlantsFound = currentUser.numPlantsFound
-    }
-
     // ViewModel
     private val homeVM by viewModels<HomeViewModel>()
 
@@ -91,41 +79,41 @@ class MapsActivity :  AppCompatActivity() {
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        auth = FirebaseAuth.getInstance()
+        menuTitle = findViewById(R.id.menu_title)
+
+        if(checkSystemForCamera()) {
+            // Able to take a picture of the plant they have found
+            Log.d(LOG, "This device has camera capabilities")
+        }
+        else {
+            // Disable the camera feature for the user
+            Log.d(LOG, "This device does not have camera capabilities")
+        }
+
         // Menu drawer logic
         navHeader = ForagerNavigationHeaderBinding.inflate(layoutInflater)
         menuLayout = binding.drawerLayout
         menuNavView = binding.myNavigationView
         val menuBtn = findViewById<MaterialToolbar>(R.id.nav_bar)
 
+        // This uses coroutines to set the logged in user's info
+        setUsersInfoWindow()
+
         // This observes any changes made to the user's plant count
         homeVM.getTheNumOfPlants.observeForever(numPlantsObserver)
-
-        // This retrieves the user's data (full name, username, date account was created, etc.)
-        homeVM.getUserLiveData.observe(this, userObserver)
 
         // This is for keep my app in "full screen" mode, sort of
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         homeVM.localDataInit(this) // Initializing local data (mainly for the auto-complete feature)
 
-        auth = FirebaseAuth.getInstance()
-
         // This is to update the mini user area in my menu drawer
         // The first time the menu is opened everything is initialized (full name, username, num plants found)
         // All other times only the amount of plants found is updated
         menuBtn.setNavigationOnClickListener {
             Log.d(LOG, "User's \"numPlantsFound\": ${currentUser.numPlantsFound}")
-            menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
-            if(homeVM.getFirstTimeClicking) {
-                Log.d(LOG, "Menu button pressed.. first time clicking: true")
-                val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
-                val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
-                menuHeaderFullName.text = currentUser.fullName
-                menuHeaderUserName.text = currentUser.userName
-                menuHeaderPlantsFound.text = numPlantsFound
-                homeVM.setFirstTimeClick(false)
-            }
-            else menuHeaderPlantsFound.text = numPlantsFound
+            menuHeaderPlantsFound.text = numPlantsFound
             menuLayout.openDrawer(GravityCompat.START) // Opens the menu when pressed
         }
 
@@ -140,9 +128,47 @@ class MapsActivity :  AppCompatActivity() {
 
     }
 
-    // Utility function for fragment navigation
-    // Allows the user to move to different fragments without having to recreate them
-    // Allows for a more fluid UX
+    /**
+     * Utility function that sets the user's information in the [NavigationView]'s header.
+     *
+     * When the user logs in data is observed from [HomeViewModel] and is reflected here.
+     *
+     * @see [HomeViewModel.observeUserInfo]
+     *
+     * @author Tylor J. Hanshaw
+     */
+    private fun setUsersInfoWindow() {
+        homeVM.observeUserInfo.observe(this, { response ->
+            if(response.user != null) {
+                currentUser = response.user!!
+                numPlantsFound = currentUser.numPlantsFound.toString()
+                menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+                val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
+                val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
+                menuHeaderFullName.text = currentUser.fullName
+                menuHeaderUserName.text = currentUser.userName
+                menuHeaderPlantsFound.text = currentUser.numPlantsFound.toString()
+            }
+            else Log.e(LOG, "Error retrieving user's data: ${response.exception}")
+        })
+    }
+
+    // Utility function for creating a file directory for photos taken
+    override fun getOutputDirectory(fileName: String): File {
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(fileName, ".jpeg", storageDir)
+    }
+
+    /**
+     * Utility function used to navigate between fragments without removing them from the
+     * fragment back-stack. Instead of replacing fragments they are all added once and then
+     * swapped around as the user navigates the UI.
+     *
+     * @param fragment [Fragment]?
+     * @param tag Fragment tag
+     *
+     * @author Tylor J. Hanshaw
+     */
     private fun attachFragment(fragment: Fragment?, tag: String) {
         val manager = supportFragmentManager
         val ft = manager.beginTransaction()
@@ -165,21 +191,60 @@ class MapsActivity :  AppCompatActivity() {
         }
     }
 
-    // Handles navigation between fragments via my menu drawer and my navigation graph
-    // Trying to show/hide fragments if they are a;ready in the back stack??
+    /**
+     * Utility function that handles click events on each menu item in the [NavigationView] menu.
+     *
+     * @see [attachFragment]
+     * @see [logOut]
+     * @param menuId [Int]
+     *
+     * @author Tylor J. Hanshaw
+     */
     private fun goToMenuItem(menuId: Int) {
         when(menuId) {
-            R.id.fragment_map -> attachFragment(MapsFragment.newInstance(), "fragment_map")
-            R.id.fragment_groups -> {
-                // If I have time I will come back to this
+            R.id.fragment_map -> {
+                menuTitle.text = "Home"
+                attachFragment(MapsFragment.newInstance(), "fragment_map")
             }
-            R.id.fragment_profile -> attachFragment(FragmentProfileMenu.newInstance(), "fragment_profile")
-            R.id.fragment_personal_list -> attachFragment(PersonalPlantListFragment.newInstance(), "fragment_personal_list")
-            R.id.fragment_plant_database -> attachFragment(PlantDatabaseFragment.newInstance(), "fragment_plant_database")
+            R.id.fragment_profile -> {
+                menuTitle.text = "Profile"
+                attachFragment(FragmentProfileMenu.newInstance(), "fragment_profile")
+            }
+            R.id.fragment_personal_list -> {
+                menuTitle.text = "${currentUser.fullName}'s found plants"
+                attachFragment(PersonalPlantListFragment.newInstance(), "fragment_personal_list")
+            }
+            R.id.fragment_plant_database -> {
+                menuTitle.text = "Plants"
+                attachFragment(PlantDatabaseFragment.newInstance(), "fragment_plant_database")
+            }
             R.id.log_out -> logOut()
         }
     }
 
+    /**
+     *
+     * Checks if the user's device has camera capabilities if the user takes a photo of a plant
+     * they find.
+     *
+     * @see [MapsFragment.resultLauncher]
+     * @return [Boolean]
+     *
+     * @author Tylor J. Hanshaw
+     */
+    private fun checkSystemForCamera(): Boolean {
+        return applicationContext.packageManager
+            .hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+    }
+
+    /**
+     *  Called when the user manually logs out via the [NavigationView] menu.
+     *
+     * @see [HomeViewModel.logout]
+     * @see [goToLogin]
+     *
+     * @author Tylor J. Hanshaw
+     */
     // I don't think I need to send an intent to my login page
     // I also don't need to receive and intent, because FirebaseAuth will hold the current user that's already signed in
     private fun logOut() {
@@ -188,21 +253,61 @@ class MapsActivity :  AppCompatActivity() {
     }
 
     companion object {
-        fun newInstance(context: Context): Intent {
-            return Intent(context, MapsActivity::class.java)
-        }
+        /**
+         * Use this companion object to create an intent for MainActivity
+         *
+         * @param context [Context]
+         * @return [Intent]
+         *
+         * @author Tylor J. Hanshaw
+         */
+        fun newInstance(context: Context): Intent = Intent(context, MapsActivity::class.java)
     }
 
+    /**
+     * Checking to see if there is a user currently logged in, in case this activity is
+     * reached without a user being logged in.
+     *
+     * An example of this would be if a user's account is deleted before logging out through
+     * the app.
+     *
+     * @see goToLogin
+     * @see [FirebaseAuth.getCurrentUser]
+     */
     override fun onResume() {
         super.onResume()
-        Log.d(LOG, "onResume() called")
-
-        // Checking to see if there is a current user (if someone is logged in)
         if(auth.currentUser == null) {
             goToLogin()
         }
     }
 
+    /**
+     * Checking to see if there is a user currently logged in, in case this activity is
+     * reached without a user being logged in.
+     *
+     * An example of this would be if a user's account is deleted before logging out through
+     * the app.
+     *
+     * @see goToLogin
+     * @see [FirebaseAuth.getCurrentUser]
+     */
+    override fun onStart() {
+        super.onStart()
+        if(auth.currentUser == null) {
+            goToLogin()
+        }
+    }
+
+    /**
+     * This function is only ever called when [logOut()][logOut] is called.
+     *
+     * Before destroying this activity and the hosted fragments I clear all cached
+     * data in [HomeViewModel].
+     *
+     * @see [LoginActivity]
+     *
+     * @author Tylor J. Hanshaw
+     */
     private fun goToLogin() {
         viewModelStore.clear() // This is supposed to clear all data held in my HomeViewModel
         val intent = Intent(this, LoginActivity::class.java)
@@ -210,107 +315,13 @@ class MapsActivity :  AppCompatActivity() {
         finish()
     }
 
-    override fun onStart() {
-        Log.d(LOG, "onStart() called")
-        super.onStart()
-    }
-
+    /**
+     * Physically removing the observer on the user's *number of plants found*.
+     *
+     * @see [HomeViewModel.getTheNumOfPlants]
+     */
     override fun onDestroy() {
         super.onDestroy()
         homeVM.getTheNumOfPlants.removeObserver(numPlantsObserver)
-        Log.d(LOG, "onDestroy() called")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d(LOG, "onPause() called")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d(LOG, "onStop() called")
     }
 }
-
-/*
-
-
-lifecycleScope.launch {
-            delay(4000L)
-            marquetteMarker.remove()
-        }
-
-
-
-        onMapClicked()
-        onMapLongClicked()
-
-private fun onMapClicked() {
-        map.setOnMapClickListener {
-            val latLong = it.latitude.toString() + ", " + it.longitude.toString()
-            val toast = Toast.makeText(this@MapsActivity, "Short click on: $latLong", Toast.LENGTH_SHORT)
-            toast.setGravity(Gravity.TOP, 50, 50)
-            toast.show()
-        }
-    }
-
-    private fun onMapLongClicked() {
-        map.setOnMapLongClickListener {
-            map.addMarker(MarkerOptions().position(it).title("Your new marker!"))
-            val toast = Toast.makeText(this@MapsActivity, "New marker at: ${it.longitude}, ${it.longitude}", Toast.LENGTH_SHORT)
-            toast.setGravity(Gravity.TOP, 50, 50)
-            toast.show()
-
-        }
-    }
-
-
-map.uiSettings.apply {
-    isZoomControlsEnabled = true
-    // I think I want this enabled, need to come back to this
-    // I'll first need to enable my-location layer
-    // isMyLocationButtonEnabled = true
-}
-typeAndStyles.setMapStyle(map, this)
-
-lifecycleScope.launch {
-    delay(4000L)
-
-    // animates the zooming in OR out depending on the zoom value given (between 0..20)
-    //map.animateCamera(CameraUpdateFactory.zoomTo(15f), 2000, null)
-
-    // This will animate the moving of the camera to a specified location in pixels, with a given duration and a GoogleMap.CancelableCallback
-    //map.animateCamera(CameraUpdateFactory.scrollBy(200f, 0f), 2000, null)
-
-    // This animates all of the properties from cameraAndViewport.marquette in CameraAndViewport.kt
-    // In this final version I use a GoogleMaps.CancelableCallback as the callback, I override two functions "onFinish()" and "onCancel()" and display a Toast message
-    map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraAndViewport.melbourne), 2000, object: GoogleMap.CancelableCallback {
-
-        // Toast text will display when the camera animation is finished
-        override fun onFinish() {
-            Toast.makeText(this@MapsActivity, "Finished", Toast.LENGTH_SHORT).show()
-        }
-
-        // Toast text will display when/if the camera animation is canceled
-        override fun onCancel() {
-            Toast.makeText(this@MapsActivity, "Canceled", Toast.LENGTH_SHORT).show()
-        }
-    })
-
-    //map.animateCamera(CameraUpdateFactory.newLatLngBounds(cameraAndViewport.melbourneBounds, 100), 2000, null)
-    // map.setLatLngBoundsForCameraTarget(cameraAndViewport.melbourneBounds)
-*/
-
-
-// This would all go in the "map.uiSettings.apply {  } block
-
-// This is from the last video I watched in the Google API tutorial
-// Don't keep this!
-// lifecycleScope.launch {
-//     delay(4000L)
-//     map.moveCamera(CameraUpdateFactory.scrollBy(-1000f, 300f))
-// }
-
-// I think I want some padding on the bottom for my buttons and other options
-// Keeping this commented so I can come back to it
-// map.setPadding(0, 0, 0, 300)

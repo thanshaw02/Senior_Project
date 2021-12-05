@@ -13,18 +13,28 @@
         android:layout_height="match_parent">
 
         <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="23dp"
+            android:fitsSystemWindows="true"
+            app:layout_constraintBottom_toTopOf="@+id/fragment_container"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/nav_bar"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            app:navigationIcon="@drawable/menu_icon"/>
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/nav_bar"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                app:navigationIcon="@drawable/menu_icon">
+
+                <TextView
+                    android:id="@+id/menu_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.appbar.MaterialToolbar>
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -33,11 +43,12 @@
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="63dp"
-            map:layout_constraintBottom_toBottomOf="parent"
-            map:layout_constraintEnd_toEndOf="parent"
-            map:layout_constraintStart_toStartOf="parent"
-            map:layout_constraintTop_toTopOf="parent"/>
+            android:layout_marginTop="38dp"
+            android:fitsSystemWindows="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -49,6 +60,7 @@
         android:layout_gravity="start"
         android:background="@color/soft_background"
         app:headerLayout="@layout/forager_navigation_header"
-        app:menu="@menu/forager_navigation_items" />
+        app:menu="@menu/forager_navigation_items"
+        android:fitsSystemWindows="true"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

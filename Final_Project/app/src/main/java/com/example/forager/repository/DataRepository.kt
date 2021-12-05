@@ -7,29 +7,37 @@ package com.example.forager.repository
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.forager.localdata.PlantsDatabaseHelper
 import com.example.forager.localdata.model.Plant
-import com.example.forager.remotedata.PlantListNode
-import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.FirebaseException
-import com.google.firebase.auth.FirebaseUser
+import com.example.forager.remotedata.*
+import com.example.forager.remotedata.model.PlantListNode
+import com.example.forager.remotedata.model.User
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
-import java.util.*
+import java.io.File
+import java.lang.Exception
+import android.database.CursorWindow
+import java.lang.reflect.Field
 
 interface MyCallback {
-    fun onCallback(plantsFound: String)
+    fun getDataFromDB(data: Any?) // Takes a parameter of type "Any?", allowing me to use this for almost anything
 }
 
 private const val LOG = "DataRepository:"
 
+/**
+ * Repository singleton that communicates with both my *Realtime Database* and my *local database*.
+ *
+ * @author Tylor J. Hanshaw
+ */
 // This is where I talk to my Realtime Database, authy, and my SQLite database
 object DataRepository {
 
@@ -37,10 +45,8 @@ object DataRepository {
     // Remote data source
     private var remoteDataSource = FirebaseDatabase.getInstance()
 
-                                                    /* LOCAL DATA */
-
-    // Probably a really BAD way of attacking this issue "getLocalPlantData" ONLY ONCE
-    var localDatabaseMade = true
+                                        /* LOCAL DATA */
+    /**********************************************************************************************/
 
     // If I do end up storing the local plants in a MutableList, store it in a ViewModel!!!!!!
     // List and getter function for the local database - holds all of the plants that are needed without internet
@@ -48,19 +54,21 @@ object DataRepository {
     private val localPlantData: MutableList<Plant> = mutableListOf()
     val getLocalPlantData get() = localPlantData
 
-    // If I do end up storing the plant names in a MutableList, store it in a ViewModel!!!!!!
-    // List and getter function that holds all plant common names in my database
     // This is for my auto-guesser in my AutoCompleteTextView
     private val plantCommonNames: MutableList<String> = mutableListOf()
     val getPlantCommonName get() = plantCommonNames
 
     // Added the first val here to try to transition to a MVVM paradigm
     fun getLocalPlantData(context: Context): MutableList<Plant> {
-        var count = 0
         // val localPlantData: MutableList<Plant> = mutableListOf() // this is new, and so is the return type for this function
         val ld = PlantsDatabaseHelper(context).readableDatabase
         val cursor = ld.rawQuery("SELECT * FROM Plants", null)
         while(cursor.moveToNext()) {
+//            val photoAsBitmap = BitmapFactory.decodeByteArray(
+//                cursor.getBlobOrNull(cursor.getColumnIndexOrThrow("Plant Photo")),
+//                0,
+//                cursor.getBlobOrNull(cursor.getColumnIndexOrThrow("Plant Photo"))!!.size
+//            )
             localPlantData.add(
                 Plant(
                     cursor.getString(cursor.getColumnIndexOrThrow("Common Name")),
@@ -69,6 +77,7 @@ object DataRepository {
                     cursor.getString(cursor.getColumnIndexOrThrow("Color")),
                     cursor.getString(cursor.getColumnIndexOrThrow("Sun")),
                     cursor.getString(cursor.getColumnIndexOrThrow("Height")),
+//                    photoAsBitmap
                 ))
             plantCommonNames.add(cursor.getString(cursor.getColumnIndexOrThrow("Common Name")))
         }
@@ -83,90 +92,181 @@ object DataRepository {
         }
     }
 
-                                                    /* REALTIME DATA */
+                                            /* REALTIME DATA */
+    /**********************************************************************************************/
 
-    private val firebaseAuth = Firebase.auth
+    // Initializing database references, FirebaseAuth
+    private val firebaseAuth = Firebase.auth // Auth used for FirebaseAuth operations and RealtimeDatabase
+    private var plantsFoundDBRef = remoteDataSource.getReference("Plants_Found")
+    private var userDBRef = remoteDataSource.getReference("Users")
 
-    // Database references etc.
-    private var plantsFoundDBRef = remoteDataSource.getReference("Plants Found")
-    var userDBRef = remoteDataSource.getReference("Users")
+    // Use this variable to upload the user's photo taken of their plant
+    private val firebaseStorage = FirebaseStorage.getInstance().reference
+    private val plantImageStorageRef = firebaseStorage.child("plant_photos")
 
-    // This does work! This is the only set of methods that are able to gte the whole Personal Plant List for each user
-    // These two LiveData's are for the lists
-    private val personalPlantListOfUser: MutableLiveData<MutableList<DataSnapshot>> = MutableLiveData()
-    val getPersonalPlantListOfUser: LiveData<MutableList<DataSnapshot>> get() = personalPlantListOfUser
-    fun getPersonalPlantListOfUser() { // This function is ONLY called for my plant lists fragments/activity
-        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).get().addOnCompleteListener { list ->
-            if(list.isSuccessful) {
-                val ds = list.result
-                val tempList: MutableList<DataSnapshot> = mutableListOf()
-                for(snapshot in ds.children) {
-                    tempList.add(snapshot)
-                }
-                personalPlantListOfUser.value = tempList
-            }
+
+    suspend fun addPlantPhotoToCloudStorage(photo: File?, plantUid: String) {
+        withContext(Dispatchers.IO) {
+            val userStorageRef = plantImageStorageRef.child(firebaseAuth.currentUser!!.uid).child(plantUid)
+            val photoUri = Uri.fromFile(photo)
+            Log.d(LOG, "Photo to adds URI: $photoUri")
+            userStorageRef.putFile(photoUri).addOnCompleteListener { result ->
+                if(result.isSuccessful) Log.d(LOG, "Photo file URU successfully added to Cloud Storage")
+                else Log.d(LOG, "Photo file URI unsuccessfully added to Cloud Storage")
+            }.await()
+            Log.d(LOG, "Download URL: ${userStorageRef.downloadUrl.await()}")
         }
+    }
+
+    suspend fun deletePlantPhotoFromCloudStorage(plantPhotoUrl: String) {
+        withContext(Dispatchers.IO) {
+            firebaseStorage.child(plantPhotoUrl).delete()
+                .addOnCompleteListener {
+                    if(it.isSuccessful) Log.d(LOG, "Photo was successfully removed.")
+                    else Log.d(LOG, "Photo was not removed.")
+                }
+        }
+    }
+
+    // Figured using a callback function here would be easier than coroutines??
+    fun getPlantPhotoFromCloudStorage(plantPhotoUri: String, callback: MyCallback) {
+        val localFile = File.createTempFile("tempFileImage", "jpeg")
+        firebaseStorage.child(plantPhotoUri).getFile(localFile).addOnCompleteListener {
+            if(it.isSuccessful) {
+                Log.d(LOG, "Successfully retrieved plant photo: ${it.result}")
+                val photoAsBitmap = BitmapFactory.decodeFile(localFile.absolutePath)
+                callback.getDataFromDB(photoAsBitmap) // Converting the photo Uri to a file here
+            }
+            else Log.d(LOG, "Photo was not retrieved.")
+        }
+    }
+
+    // Grabbing the user's found plant list using a callback
+    // Not currently using this, and probably won't in the future
+    // But this was be trying to fix a bug
+    // The bug is that if you add a plant before opening your personal list, the plant added won't be seen until you re-log
+    // The issue is happening because the observer that observes new nodes added isn't set up until you open your list
+    // So if you open your list and then add plants you will see those added, but if you don't open your list they won't show up
+    fun getUsersPreviousPlantsFoundList(callback: MyCallback) {
+        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).get().addOnCompleteListener {
+            val response = DataResponse()
+            if(it.isSuccessful) {
+                val result = it.result
+                response.dataSnapshot = result
+            }
+            else {
+                response.exception = it.exception
+            }
+            callback.getDataFromDB(response)
+        }
+    }
+
+    // Coroutine solution to getting the user's found plants list when logging in
+    // This uses my "DataResponse" data class to either get the user's found plants list
+    // Or to store the error if the operation was unsuccessful
+    suspend fun getResponseFromDB(): DataResponse {
+        val dataResponse = DataResponse()
+        try {
+            dataResponse.plants = plantsFoundDBRef
+                .child(firebaseAuth.currentUser!!.uid)
+                .get().await().children.map { snapShot ->
+                    val node = PlantListNode(
+                        snapShot.child("lat").value.toString().toDouble(),
+                        snapShot.child("long").value.toString().toDouble(),
+                        Plant(
+                            snapShot.child("plantAdded").child("commonName").value
+                                .toString(),
+                            snapShot.child("plantAdded").child("scientificName").value.
+                            toString(),
+                            snapShot.child("plantAdded").child("plantType").value
+                                .toString().toInt(),
+                            snapShot.child("plantAdded").child("plantColor").value
+                                .toString(),
+                            snapShot.child("plantAdded").child("sun").value
+                                .toString(),
+                            snapShot.child("plantAdded").child("height").value
+                                .toString()
+                        ),
+                        snapShot.child("plantNotes").value.toString(),
+                        snapShot.child("dateFound").value.toString(),
+                        snapShot.child("plantPhotoUri").value.toString()
+                    )
+                    node.setUID(snapShot.key) // Instead of auto-generating a uid, I just need to uid given to the plant node previously
+                    node
+            }.toMutableList()
+        } catch (ex: Exception) {
+            dataResponse.exception = ex
+        }
+        return dataResponse
     }
 
     // This will clear the markers from whoever was logged in previously
     fun clearOldListData() {
-        personalPlantListOfUser.value!!.clear()
-
+        plantCommonNames.clear()
+        localPlantData.clear()
     }
 
     /**
      *                          GETTING USER'S DATA
      */
-    // These 7 lines load the logged in user's data when they first log in
-    // ONLY HAPPENS ONCE
-    private val user: MutableLiveData<DataSnapshot> = MutableLiveData()
-    val getUser: LiveData<DataSnapshot> get() = user
-    fun getTheUserFromFirebase() {
-        userDBRef.child(firebaseAuth.currentUser!!.uid).get().addOnSuccessListener { userDS ->
-            user.value = userDS
+
+    // Getting user's info but with coroutines
+    suspend fun getUserInfo(): UserResponse {
+        val userResponse = UserResponse()
+        try {
+            userResponse.user = userDBRef
+                .child(firebaseAuth.currentUser!!.uid)
+                .get().await().getValue(User::class.java)
+        } catch (ex: Exception) {
+            userResponse.exception = ex
         }
+        return userResponse
     }
 
-    fun getUsersFullName(): String = user.value!!.child("fullName").value.toString()
+    fun getUsersFullName(callback: MyCallback) {
+        userDBRef.child(firebaseAuth.currentUser!!.uid).child("fullName").get()
+            .addOnCompleteListener {
+                val response = StringDataResponse()
+                if(it.isSuccessful) {
+                    val result = it.result
+                    response.data = result.value.toString()
+                    callback.getDataFromDB(response)
+                }
+                else {
+                    response.exception = it.exception
+                    callback.getDataFromDB(response)
+                }
+            }
+    }
 
     /**
      *                          GETTING USER'S PLANTS FOUND COUNT
      */
 
-    private val testingNumPlantsFoundGet: MutableLiveData<DataSnapshot> = MutableLiveData()
-    val getTestingNumPlantsFoundGet: LiveData<DataSnapshot> get() = testingNumPlantsFoundGet
-    fun getUsersPlantFoundData() {
-        userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").get().addOnCompleteListener {
-            if(it.isSuccessful) {
-                testingNumPlantsFoundGet.postValue(it.result)
-                Log.d(LOG, "Was able to get the user's \"numPlantsFound\" data: ${testingNumPlantsFoundGet.value}")
-            }
-            else Log.d(LOG, "Could not get numPlantsFound from the user.. LINE 228")
-        }
+    fun getNumberOfPlantsFound(callback: MyCallback) {
+        userDBRef.child(firebaseAuth.currentUser!!.uid)
+            .child("numPlantsFound")
+            .addValueEventListener(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val number = snapshot.value
+                    callback.getDataFromDB(number.toString())
+                }
+
+                override fun onCancelled(error: DatabaseError) { }
+            })
     }
 
+    // This physically adds the new plant to the database
+    // Rename it to match my remove method??
+    fun addPlantLocation(plantListNode: PlantListNode) {
+        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(plantListNode.getUID())
+            .setValue(plantListNode)
+    }
 
-
-
-    // As of now, I don't think this try {...} catch {...} is actually doing anything
-    //      - Possibly scrap it or try getting it working?
-    //      - I'll probably tru to keep it since it's probably good practice to use a try {...} catch {...} block
-    // Function that physically adds the new plant that a user found to the users personal "found plant" list
-    fun addPlantLocation(coord: LatLng, plantAdding: Plant, plantNotes: String) { /* I could possibly use LiveData here actually? */
-        try {
-            val plantUUID = UUID.randomUUID()
-            val formatter = SimpleDateFormat("MM-dd-yyyy")
-            val formattedDate = formatter.format(Calendar.getInstance().time)
-            plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child("$plantUUID")
-                .setValue(
-                    PlantListNode(
-                        coord.latitude,
-                        coord.longitude,
-                        plantAdding,
-                        plantNotes,
-                        formattedDate))
-        } catch(e: FirebaseException) {
-            Log.e(LOG, "Failed to add plant with error: $e")
+    fun removePlantFromDB(uid: String) {
+        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(uid).removeValue().addOnCompleteListener {
+            if(it.isSuccessful) Log.d(LOG, "Removed plant successfully! Plant uid was: $uid")
+            else Log.d(LOG, "Was not successful in removing the plant with the uid of: $uid")
         }
     }
 
@@ -176,16 +276,12 @@ object DataRepository {
         }
     }
 
-    fun readData(callback: MyCallback) {
-        userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val number = snapshot.value
-                callback.onCallback(number.toString())
-            }
-
-            override fun onCancelled(error: DatabaseError) { }
-        })
+    suspend fun decrementPlantsFound(decrement: Int) {
+        withContext(Dispatchers.IO) {
+            userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").setValue(decrement).await()
+        }
     }
+
 
 //                                              LOGIN/REGISTER CODE BELOW
 //    /***************************************************************************************************************************/
@@ -212,56 +308,24 @@ object DataRepository {
         }
 
     // Trying to remove the use info all in one suspend function here
-    fun deleteUserAuth(user: FirebaseUser) {
-        Log.d(LOG, "Users UID: ${user.uid}")
-        user.delete().addOnCompleteListener {
-            if(it.isSuccessful) Log.d(LOG, "User was successfully deleted.")
-            else Log.d(LOG, "User was NOT successfully deleted.")
-        }
-    }
-
-    // This is a test to see if this block of code (which is used in my coroutine method above) works on its own
-    // This does in fact work on its own, so the problem is with how I'm handling coroutines
-    fun deleteUserFromDB(user: FirebaseUser, dbRef: DatabaseReference) {
-        Log.d(LOG, "User UID: ${user.uid}")
-        val uid = user.uid
-        dbRef.child("Users").child(user.uid).removeValue().addOnCompleteListener {
-            if(it.isSuccessful) Log.d(LOG, "User has been deleted from database.")
-            else Log.d(LOG, "User has NOT been deleted from database.")
-        }
-        dbRef.child("Plants Found").child(user.uid).removeValue().addOnCompleteListener {
-            if(it.isSuccessful) Log.d(LOG, "Users personal plant list has been deleted from the database.")
-            else Log.d(LOG, "Users personal plant list has NOT been deleted from the database.")
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    private val someString: String = ""
-//    val getSomeString get() = someString
-    suspend fun getUsersPersonalPlantCount(): DataSnapshot? {
-        val something = userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").get().await()
-        Log.d(LOG, "This is from DataRepository: $something")
-        Log.d(LOG, "This did not work")
-        return something
-    }
-
-    suspend fun updateUsersPlantsFound(update: Int) {
+    suspend fun reAuthenticateUser(email: String, password: String) {
         withContext(Dispatchers.IO) {
-            userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").setValue(update).await()
+            firebaseAuth.currentUser!!.reauthenticate(EmailAuthProvider.getCredential(email, password))
+                .addOnCompleteListener {
+                    if(it.isSuccessful) {
+                        Log.d(LOG, "Successfully delete the user's auth account.")
+                        deleteUserAuth()
+                        signOut()
+                    }
+                    else Log.d(LOG, "Failed to re-authenticate user.")
+                }
         }
     }
 
-
-
+    private fun deleteUserAuth() {
+        firebaseAuth.currentUser!!.delete().addOnCompleteListener {
+            if(it.isSuccessful) Log.d(LOG, "Fully deleted the user's profile.")
+            else Log.d(LOG, "Failed to delete user's auth.")
+        }
+    }
 }

@@ -7,7 +7,7 @@ import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import com.example.forager.MapsActivity
-import com.example.forager.remotedata.User
+import com.example.forager.remotedata.model.User
 import com.example.forager.databinding.ActivityRegisterBinding
 import com.example.forager.repository.login.LoginActivity
 import com.google.firebase.auth.FirebaseAuth

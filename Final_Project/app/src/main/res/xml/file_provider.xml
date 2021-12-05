@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+
+    <!--
+        Specifying the path as "Pictures here because I am using Environment.DIRECTORY_PICTURES
+        when getting my output directory in my FileDirectory interface.
+
+        This is basically saying that any content in this directory that are "Pictures" allow
+        me to create content URI's for.
+     -->
+    <external-files-path
+        name="images"
+        path="Pictures"/>
+
+</paths>

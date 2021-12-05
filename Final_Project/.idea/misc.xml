@@ -13,7 +13,9 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/gradient_background.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/green_trading_button_effect.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/groups_menu_icon.xml" value="0.3310810810810811" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/home_menu_icon.xml" value="0.3223684210526316" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ic_baseline_expand_more_24.xml" value="0.3310810810810811" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ic_gallery.xml" value="0.3223684210526316" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ic_launcher_background.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ic_mushroom_splash_icon.xml" value="0.24009009009009008" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/login_btn.xml" value="0.3310810810810811" />
@@ -30,6 +32,7 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ui_background_list.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ui_background_list_item.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout-v23/fragment_plant.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_camera.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_login.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_maps.xml" value="0.33" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_menu_hosting.xml" value="0.21981981981981982" />
@@ -41,9 +44,12 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_single_plant_from_user.xml" value="0.24954954954954955" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_splash_screen.xml" value="0.22612612612612612" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/bottom_nav_layout.xml" value="0.3171171171171171" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/custom_map_marker_snippet.xml" value="0.3087719298245614" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/detailed_plant_list_node_view.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/forager_navigation_drawer.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/forager_navigation_header.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_add_plant.xml" value="0.3171171171171171" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_camera.xml" value="0.36140350877192984" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_found_plant_form.xml" value="0.264" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_groups.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_inform_user_of_logout.xml" value="0.281981981981982" />
@@ -59,6 +65,7 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/list_item_plant.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/personal_single_plant_card.xml" value="0.4" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/single_plant_card.xml" value="0.3171171171171171" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/single_plant_image_view.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/single_plant_item.xml" value="0.4" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/user_delete_account_alert_box.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/menu/bottom_nav_menu.xml" value="0.3171171171171171" />
@@ -68,6 +75,7 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.3828125" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/mipmap-anydpi-v26/plant_icon.xml" value="0.2206140350877193" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/mipmap-anydpi-v26/plant_icon_round.xml" value="0.2206140350877193" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/xml/file_provider.xml" value="0.21403508771929824" />
       </map>
     </option>
   </component>
