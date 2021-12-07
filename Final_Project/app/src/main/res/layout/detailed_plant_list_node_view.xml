@@ -3,36 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:elevation="10dp">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/expanded_plant_card_view"
         android:layout_width="350dp"
-        android:layout_height="450dp"
+        android:layout_height="650dp"
+        android:padding="10dp"
+        android:elevation="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:elevation="10dp"
-        app:cardCornerRadius="5dp">
+        android:background="@android:color/transparent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/soft_background">
-
+            android:padding="10dp"
+            android:background="@android:color/transparent">
 
             <TextView
                 android:id="@+id/common_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="20dp"
                 android:text="Common Name"
                 android:textSize="25sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/plant_photo_expanded" />
 
             <TextView
                 android:id="@+id/scientific_name"
@@ -149,16 +151,16 @@
                 app:layout_constraintStart_toEndOf="@+id/plant_type"
                 app:layout_constraintTop_toBottomOf="@id/plant_sun_specific" />
 
-                <TextView
-                    android:id="@+id/users_notes_AREA"
-                    android:layout_width="250dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:textAlignment="center"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.496"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/users_note" />
+            <TextView
+                android:id="@+id/users_notes_AREA"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textAlignment="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.496"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/users_note" />
 
             <TextView
                 android:id="@+id/users_note"
@@ -193,6 +195,18 @@
                 android:textAlignment="center"
                 app:layout_constraintStart_toEndOf="@+id/plant_type"
                 app:layout_constraintTop_toBottomOf="@+id/plant_height_specific" />
+
+            <ImageView
+                android:id="@+id/plant_photo_expanded"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="5dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/my_plants_menu_icon" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,0 +1,27 @@
+Issue I ran into that I could bring up in my presentation:
+
+First, when trying to load images for all the locally saved plants I tried to store them into my SQLite database as a BLOB. But I 
+quickly realized that each individual row in my table had too much data for the SQLite cursor to deal with. There's a 2MB max on data 
+per row, and if exceeded an exception will be thrown.
+
+Next I tried keeping the photos in my Firebase cloude storage instance, and would instead hold the last part of the file path for each 
+photo in my local SQLite database. I'd instead get the photo from my Firebase storage when it's needed in my RecyclerView. But this to 
+proved to not be feasible, because with a RecycleView as View's are moved off screen they are destroyed and recreated again when they 
+they appear on screen. This means that as the user scrolls up and down the RecyclerView I'm constantly make calls to my Firebase storage,
+so my images would either take a second to load or be in the wrong spot due to some weird logic when destroying and recreating the Views.
+
+I instead settled with using a 3rd party library called Glide. Glide makes loading images, either locally or remotely, seamless - and adds
+some really cool customization and optimization. So what I ended up doing is storing the URL connected to each photo in my Firebase storage
+into my local SQLite database (when getting data from my local database I create a new instance of a Plant for each row, therefore 
+storing each URL in a Plant instance locally). Then when displaying each photo in my RecyclerView I would use Glide to load each photo 
+useing the stored URL in each Plant instance.
+
+Here's what I did with Glide:
+
+Glide.with(this@PlantDatabaseFragment).load(plant.getPlantPhotoUri())
+                .diskCacheStrategy(DiskCacheStrategy.RESOURCE) // This allows Glide to cache the images locally
+                .into(plantImage)
+
+Where "plantImage" is an Imageview in my layout, and "plant.getPlantUri()" is the URL that poinst to that plants photo.
+
+Cool stuff!! Bring this up on Thursday?

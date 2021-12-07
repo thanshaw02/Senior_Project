@@ -2,24 +2,29 @@ package com.example.forager.fragments
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.forager.R
-import com.example.forager.databinding.SinglePlantCardBinding
 import com.example.forager.databinding.SinglePlantImageViewBinding
 import com.example.forager.fragments.PersonalPlantListFragment.Companion.newInstance
 import com.example.forager.localdata.model.Plant
+import com.example.forager.repository.MyCallback
 import com.example.forager.viewmodel.HomeViewModel
 
 private const val LOG = "PlantDatabaseFragment:"
@@ -41,6 +46,7 @@ class PlantDatabaseFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private var plantDBAdapter: PlantDBAdapter? = null
+    private lateinit var plantCommonNames: EditText
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,7 +54,19 @@ class PlantDatabaseFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_plant_database, container, false)
 
-        recyclerView = view.findViewById(R.id.plant_database_RV) as RecyclerView
+        plantCommonNames = view.findViewById(R.id.search_plants_ET)
+        plantCommonNames.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
+
+            override fun onTextChanged(query: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                if (query != "") plantDBAdapter!!.setData(homeVM.searchForPlantLocally(query.toString()))
+                else plantDBAdapter!!.setData(homeVM.getLocalPlantData)
+            }
+
+            override fun afterTextChanged(p0: Editable?) { }
+        })
+
+        recyclerView = view.findViewById(R.id.plant_database_RV)
 
         // Setting up the RecyclerView's adaptor
         recyclerView.apply {
@@ -68,48 +86,44 @@ class PlantDatabaseFragment : Fragment() {
      * @param cardItemView [SinglePlantCardBinding]
      */
     private inner class PlantDBHolder(
-//        private val cardItemView: SinglePlantCardBinding
         private var cardItemView: SinglePlantImageViewBinding
     ) : RecyclerView.ViewHolder(cardItemView.root) {
 
         private var commonName: TextView
         private var scientificName: TextView
         private var plantImage: ImageView
-//        private var expandedCommonName: TextView
-//        private var expandedScientificName: TextView
-//        private var expandedPlantType: TextView
-//        private var expandedPlantColor: TextView
-//        private var expandedPlantSun: TextView
-//        private var expandedPlantHeight: TextView
-//        private var currentPlant: Plant? = null
 
         init {
             commonName = cardItemView.commonName
-            scientificName =  cardItemView.scientificName
+            scientificName = cardItemView.scientificName
             plantImage = cardItemView.plantPhoto
-//            expandedCommonName = cardItemView.expandedCommonName
-//            expandedScientificName = cardItemView.expandedScientificName
-//            expandedPlantType = cardItemView.plantTypeSpecific
-//            expandedPlantColor = cardItemView.plantColorSpecific
-//            expandedPlantSun = cardItemView.plantSunSpecific
-//            expandedPlantHeight = cardItemView.plantHeightSpecific
         }
 
         // TODO: Add animation when expanding if possible
         fun bindView(plant: Plant?) {
-            // Using the single plant image view
             commonName.text = plant!!.commonName
             scientificName.text = homeVM.checkNameLengths(plant)
-            plantImage.setImageBitmap(plant.getPlantPhotoUri())
+
+            // Using Glide to load in the photo associated with this plant
+            // "diskCacheStrategy(DiskCacheStrategy.RESOURCE)" means the photo is being cached locally
+            // And I'm loading the image into "plantImage"
+            Glide.with(this@PlantDatabaseFragment).load(plant.getPlantPhotoUri())
+                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                .into(plantImage)
 
             cardItemView.singleCardView.setOnClickListener {
                 val layout = layoutInflater.inflate(R.layout.detailed_plant_list_node_view, null)
-                layout.findViewById<TextView>(R.id.common_name).text = plant!!.commonName
+                val expandedPlantPhoto = layout.findViewById<ImageView>(R.id.plant_photo_expanded)
+                layout.findViewById<TextView>(R.id.common_name).text = plant.commonName
                 layout.findViewById<TextView>(R.id.scientific_name).text = plant.scientificName
-                layout.findViewById<TextView>(R.id.plant_type_specific).text = homeVM.getPlantType(plant.plantType!!)
+                layout.findViewById<TextView>(R.id.plant_type_specific).text =
+                    homeVM.getPlantType(plant.plantType!!)
                 layout.findViewById<TextView>(R.id.plant_color_specific).text = plant.plantColor
                 layout.findViewById<TextView>(R.id.plant_sun_specific).text = plant.sun
                 layout.findViewById<TextView>(R.id.plant_height_specific).text = plant.height
+
+                Glide.with(this@PlantDatabaseFragment).load(plant.getPlantPhotoUri())
+                    .into(expandedPlantPhoto)
 
                 // Hiding the data only needed for found plants
                 layout.findViewById<TextView>(R.id.date_found).visibility = View.GONE
@@ -121,39 +135,6 @@ class PlantDatabaseFragment : Fragment() {
                     .setCancelable(true)
                     .show()
             }
-
-            // Old way of doing this with no image displayed
-//            currentPlant = plant!!
-//            commonName.text = plant.commonName
-//            scientificName.text = homeVM.checkNameLengths(plant)
-//
-//            if(plant.getIsExpanded()) cardItemView.expandedInfo.visibility = View.VISIBLE
-//            else cardItemView.expandedInfo.visibility = View.GONE
-//
-//            expandedCommonName.text = plant.commonName
-//            expandedScientificName.text = plant.scientificName
-//            expandedPlantType.text = homeVM.getPlantType(plant.plantType!!) // Come back to this to find the plant type
-//            expandedPlantColor.text = plant.plantColor
-//            expandedPlantSun.text = plant.sun
-//            expandedPlantHeight.text = plant.height
-//
-//            cardItemView.dateFound.visibility = View.GONE
-//            cardItemView.dateFoundET.visibility = View.GONE
-//            cardItemView.usersNote.visibility = View.GONE
-//            cardItemView.usersNotesAREA.visibility = View.GONE
-//
-//            cardItemView.expandDown.setOnClickListener {
-//                if(plant.getIsExpanded()) {
-//                    cardItemView.expandedInfo.visibility = View.GONE
-//                    cardItemView.expandDown.setImageResource(R.drawable.expand_down)
-//                    plant.setIsExpanded(false)
-//                }
-//                else {
-//                    cardItemView.expandedInfo.visibility = View.VISIBLE
-//                    cardItemView.expandDown.setImageResource(R.drawable.expand_up)
-//                    plant.setIsExpanded(true)
-//                }
-//            }
         }
 
     }
@@ -167,13 +148,12 @@ class PlantDatabaseFragment : Fragment() {
      * @param plantList [List<Plant>][plantList]
      */
     private inner class PlantDBAdapter(
-        private val plantList: List<Plant>?
-        ) : RecyclerView.Adapter<PlantDBHolder>() {
+        private var plantList: MutableList<Plant>?
+    ) : RecyclerView.Adapter<PlantDBHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantDBHolder {
             val layoutInflater = LayoutInflater.from(activity)
-//            val cardViewBinding = SinglePlantCardBinding.inflate(layoutInflater)
-            val cardViewBinding  = SinglePlantImageViewBinding.inflate(layoutInflater)
+            val cardViewBinding = SinglePlantImageViewBinding.inflate(layoutInflater)
             return PlantDBHolder(cardViewBinding)
         }
 
@@ -187,8 +167,15 @@ class PlantDatabaseFragment : Fragment() {
 
         // Custom function that deals with animations on my RecyclerView
         fun animateView(viewHolder: RecyclerView.ViewHolder) {
-            val recyclerViewAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.bounce_inter)
+            val recyclerViewAnimation =
+                AnimationUtils.loadAnimation(requireContext(), R.anim.bounce_inter)
             viewHolder.itemView.animation = recyclerViewAnimation
+        }
+
+        // This is for when a plant is submitted to the search box
+        fun setData(plantSearched: MutableList<Plant>) {
+            plantList = plantSearched
+            notifyDataSetChanged()
         }
 
     }

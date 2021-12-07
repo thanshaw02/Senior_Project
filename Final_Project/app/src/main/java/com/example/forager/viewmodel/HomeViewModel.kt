@@ -6,6 +6,7 @@
 package com.example.forager.viewmodel
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.*
@@ -18,6 +19,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.android.synthetic.main.forager_navigation_header.view.*
 import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -37,16 +39,40 @@ private const val LOG = "HomeViewModel"
  */
 class HomeViewModel : ViewModel() {
 
-    /**
-     *                          Local Data Operations
-     */
+    /* Used for searching both Local Data and Remote Data */
+
+    fun searchForPlantLocally(query: String): MutableList<Plant> {
+        return DataRepository.getLocalPlantData.filter { plant ->
+            plant.commonName.contains(query)
+        } as MutableList<Plant>
+    }
+
+    fun searchForPlantRemotely(query: String): MutableList<PlantListNode> {
+        return personalPlantList.filter { plantNode ->
+            plantNode.plantAdded.commonName.contains(query)
+        } as MutableList<PlantListNode>
+    }
+
+    private val personalPlantList: MutableList<PlantListNode> = mutableListOf()
+    val getPersonalPlantList: List<PlantListNode> get() = personalPlantList
+
+    fun cacheUsersFoundPlantList() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val dataResponse = DataRepository.getResponseFromDB()
+            if (dataResponse.exception == null) {
+                personalPlantList.addAll(dataResponse.plants!!)
+            }
+        }
+    }
+
+    /* Local Data Operations */
 
     val getLocalPlantData: MutableList<Plant> get() = DataRepository.getLocalPlantData
 
     /**
      * Initializing the SQLite database to be used in the fragment PlantDatabaseFragment.
      *
-     * @see [com.example.forager.MapsActivity]
+     * @see [com.example.forager.activities.MapsActivity]
      * @see [DataRepository.getLocalPlantData]
      * @param context [Context]
      */
@@ -112,6 +138,7 @@ class HomeViewModel : ViewModel() {
             plantNodeUid
         )
         DataRepository.addPlantLocation(newNode)
+        personalPlantList.add(newNode) // Adding new plants to the locally list
         newPlantListNode.postValue(newNode)
     }
 
@@ -176,11 +203,37 @@ class HomeViewModel : ViewModel() {
      *
      * @author Tylor J. Hanshaw
      */
-    fun addPlantPhotoToCloudStorage(photo: File?, plantUid: String) {
+    fun addPlantPhotoToCloudStorage(
+        photo: File?,
+        plantNodeUid: String,
+        latLng: LatLng,
+        plantToAdd: Plant,
+        plantNotes: String
+    ) {
         viewModelScope.launch {
-            DataRepository.addPlantPhotoToCloudStorage(photo, plantUid)
+            val newNode = PlantListNode(
+                latLng.latitude,
+                latLng.longitude,
+                plantToAdd,
+                plantNotes,
+                getCurrentDate(),
+                "/plant_photos/${FirebaseAuth.getInstance().currentUser!!.uid}/$plantNodeUid",
+                plantNodeUid
+            )
+            DataRepository.addPlantPhotoToCloudStorage(photo, plantNodeUid, newNode)
+
         }
     }
+
+    val waitForNewNodeAdded: LiveData<PlantListNode> = DataRepository.getPlantAddedToDB
+
+//    val getPhotoUrl = liveData(Dispatchers.IO) {
+//
+//    }
+
+//    fun getUrlForPlantPhoto(plantUid: String): LiveData<PlantListNode> {
+//        return DataRepository.getUrlForPlantPhoto(plantUid)
+//    }
 
     /**
      * Used in *PersonalPlantFragment* when a plant is swiped left and removed.
@@ -192,32 +245,28 @@ class HomeViewModel : ViewModel() {
      * @author Tylor J. Hanshaw
      */
     fun removePlantPhotoFromCloudStorage(plantPhotoUrl: String?) {
-        if(plantPhotoUrl != null) {
+        if (plantPhotoUrl != null) {
             viewModelScope.launch(Dispatchers.IO) {
                 DataRepository.deletePlantPhotoFromCloudStorage(plantPhotoUrl)
             }
-        }
-        else Log.d(LOG, "This plant entry has no photo associated with it.")
+        } else Log.d(LOG, "This plant entry has no photo associated with it.")
     }
 
     /**
      * Used to get a plant photo from the Firebase storage for displaying in the
      * [PersonalPlantListFragment][com.example.forager.fragments.PlantDatabaseFragment]
      *
-     * @see [DataRepository.getPlantPhotoFromCloudStorage]
+     * @see [DataRepository.getPersonalPlantPhotoFromCloudStorage]
      * @param plantPhotoUri File path of the photo needed for the
      * [PersonalPlantList][com.example.forager.fragments.PlantDatabaseFragment].
      * @param callback [MyCallback] interface used as a callback function
      *
      * @author Tylor J. Hanshaw
      */
-    fun getPlantPhotoFromCloudStorage(plantPhotoUri: String?, callback: MyCallback) {
-        if(plantPhotoUri != null) {
-            viewModelScope.launch(Dispatchers.IO) {
-                DataRepository.getPlantPhotoFromCloudStorage(plantPhotoUri, callback)
-            }
-        }
-        else Log.d(LOG, "This plant entry has no photo associated with it.")
+    fun getPersonalPlantPhotoFromCloudStorage(plantPhotoUri: String?, callback: MyCallback) {
+        if (plantPhotoUri != null) {
+            DataRepository.getPersonalPlantPhotoFromCloudStorage(plantPhotoUri, callback)
+        } else Log.e(LOG, "This plant entry has no photo associated with it.")
 
     }
 
@@ -247,21 +296,9 @@ class HomeViewModel : ViewModel() {
         DataRepository.getUsersFullName(callback)
     }
 
-    // Not currently using this, and probably won't in the future
-    // But this was be trying to fix a bug
-    // The bug is that if you add a plant before opening your personal list, the plant added won't be seen until you re-log
-    // The issue is happening because the observer that observes new nodes added isn't set up until you open your list
-    // So if you open your list and then add plants you will see those added, but if you don't open your list they won't show up
-    fun getUsersPreviousPlantsFoundList(callback: MyCallback) {
-        DataRepository.getUsersPreviousPlantsFoundList(callback)
-    }
 
-
-                        /* Logging out/removing a user's account operations */
+    /* Logging out/removing a user's account operations */
     /**********************************************************************************************/
-    // This works, but doesn't look great
-    // Keep for now, but if I have time come back and optimize this
-    private var databaseHolder = FirebaseDatabase.getInstance()
 
     /**
      * Physically deletes the user's data in my Realtime Database, both in the *Users* node and
@@ -304,7 +341,7 @@ class HomeViewModel : ViewModel() {
     }
 
 
-                    /* Handles getting data when first logging in via Coroutines */
+    /* Handles getting data when first logging in via Coroutines */
     /**********************************************************************************************/
 
     /**
@@ -321,7 +358,6 @@ class HomeViewModel : ViewModel() {
         emit(DataRepository.getResponseFromDB())
     }
 
-
     /**
      * Using coroutines to retrieve the user's information in my
      * Realtime Database. I get the data from [DataRepository] inside of a
@@ -337,7 +373,7 @@ class HomeViewModel : ViewModel() {
     }
 
 
-                                /* Handling the toggling of markers */
+    /* Handling the toggling of markers */
     /**********************************************************************************************/
 
     // This gets the user's list of plants found and re-creates the markers on the map
@@ -367,7 +403,7 @@ class HomeViewModel : ViewModel() {
      */
     fun removeMarker(lat: Double, long: Double) {
         val markerIndex = findMarker(LatLng(lat, long))
-        if(markerIndex != -1) {
+        if (markerIndex != -1) {
             plantsFoundMarkers[markerIndex].remove()
             plantsFoundMarkers.removeAt(markerIndex)
         }
@@ -386,10 +422,10 @@ class HomeViewModel : ViewModel() {
      * @author Tylor J. Hanshaw
      */
     private fun findMarker(coords: LatLng): Int {
-        for(m in plantsFoundMarkers.indices) {
-            if(plantsFoundMarkers[m].position.latitude == coords.latitude &&
-                plantsFoundMarkers[m].position.longitude == coords.longitude)
-                    return m
+        for (m in plantsFoundMarkers.indices) {
+            if (plantsFoundMarkers[m].position.latitude == coords.latitude &&
+                plantsFoundMarkers[m].position.longitude == coords.longitude
+            ) return m
         }
         return -1
     }
@@ -404,7 +440,9 @@ class HomeViewModel : ViewModel() {
      *
      * @see [plantsFoundMarkers]
      */
-    private fun clearMarkers() { plantsFoundMarkers.clear() }
+    private fun clearMarkers() {
+        plantsFoundMarkers.clear()
+    }
 
     /**
      * Used when toggling the [Marker]'s on the map on or off.
@@ -421,7 +459,7 @@ class HomeViewModel : ViewModel() {
     }
 
 
-                                        /* Utility functions */
+    /* Utility functions */
     /**********************************************************************************************/
 
     /**
@@ -463,9 +501,9 @@ class HomeViewModel : ViewModel() {
      * @author Tylor J. Hanshaw
      */
     fun checkNameLengths(plant: Plant): String {
-        if(plant.commonName.length > 19 && plant.scientificName.length > 20) {
+        if (plant.commonName.length > 19 && plant.scientificName.length > 20) {
             var shortenedScientificName = ""
-            for(letter in 0..10) shortenedScientificName += plant.scientificName[letter]
+            for (letter in 0..10) shortenedScientificName += plant.scientificName[letter]
             return "$shortenedScientificName..."
         }
         return plant.scientificName
@@ -481,49 +519,12 @@ class HomeViewModel : ViewModel() {
      * @author Tylor J. Hanshaw
      */
     fun getPlantType(plantType: Int): String {
-        return when(plantType) {
+        return when (plantType) {
             0 -> "Wildflower"
             1 -> "Fern"
             2 -> "Tree/Shrub/Vine"
             3 -> "Grasses/Sedges/Rushes"
             else -> "Unknown"
-        }
-    }
-
-    /**
-     * Utility that converts the photo taken by the user from a *bitmap* to a file. This file is
-     * to be uploaded to Firebase Cloud Storage.
-     *
-     * @param takenImage [Bitmap]
-     * @param fileNameToSave [String]
-     * @return Returns the image in [File]? format.
-     */
-    fun convertBitmapToFile(takenImage: Bitmap, fileDir: File): File? {
-        var file: File? = null
-        val userUid = FirebaseAuth.getInstance().currentUser!!.uid
-        return try {
-            file = File(
-                fileDir,
-                SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US)
-                    .format(System.currentTimeMillis()) + ".jpeg")
-            file.createNewFile()
-
-            // Converting Bitmap to byte array
-            val bos = ByteArrayOutputStream()
-            takenImage.compress(Bitmap.CompressFormat.JPEG, 0, bos)
-            val photoData = bos.toByteArray()
-
-            // Write the bytes to the file
-            val fos = FileOutputStream(file)
-            fos.write(photoData)
-            fos.flush()
-            fos.close()
-            Log.d(LOG, "Bitmap successfully converted to a file")
-            file
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.d(LOG, "Bitmap unsuccessfully converted to a file")
-            file
         }
     }
 }

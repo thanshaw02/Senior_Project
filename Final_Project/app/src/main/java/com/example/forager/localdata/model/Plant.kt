@@ -32,44 +32,16 @@ data class Plant(
     val plantColor: String = "",
     val sun: String = "",
     val height: String = "",
-    @Exclude private val plantPhotoUri: Bitmap? = null,
-    @Exclude private var isExpanded: Boolean = false
+    @Exclude private val plantPhotoUri: String? = null
 ) {
 
     /**
      * Member function used to *get* the given plants photo URI.
      *
      * @see plantPhotoUri
-     * @return [Bitmap]?
+     * @return [String]?
      */
     @Exclude
-    fun getPlantPhotoUri(): Bitmap? = plantPhotoUri
-
-    /**
-     * Member function used primarily to exclude the associated member variable [isExpanded]
-     * from being added to my RealtimeDatabase when a new user finds a plant. But also used in
-     * the [PlantDatabaseFragment][com.example.forager.fragments.PlantDatabaseFragment] to
-     * open/close the extended menu for each plant.
-     *
-     * @sample [com.example.forager.fragments.PlantDatabaseFragment.PlantDBHolder.bindView]
-     * @see isExpanded
-     * @return [Boolean]
-     */
-    @Exclude
-    fun getIsExpanded(): Boolean = isExpanded
-
-    /**
-     * Member function used primarily to exclude the associated member variable [isExpanded]
-     * from being added to my RealtimeDatabase when a new user finds a plant. But also used in
-     * the PlantDatabaseFragment to open/close the extended menu for each plant.
-     *
-     * @sample [com.example.forager.fragments.PlantDatabaseFragment.PlantDBHolder.bindView]
-     * @param expand [Boolean]
-     * @see isExpanded
-     */
-    @Exclude
-    fun setIsExpanded(expand: Boolean) {
-        isExpanded = expand
-    }
+    fun getPlantPhotoUri(): String? = plantPhotoUri
 
 }

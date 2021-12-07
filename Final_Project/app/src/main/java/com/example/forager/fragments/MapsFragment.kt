@@ -17,7 +17,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
-import com.example.forager.FileDirectory
+import com.example.forager.activities.FileDirectory
 import com.example.forager.R
 import com.example.forager.repository.MyCallback
 import com.example.forager.viewmodel.HomeViewModel
@@ -59,16 +59,19 @@ class MapsFragment : Fragment() {
     private lateinit var fileDir: FileDirectory
 
     // For camera operations
-    // This works!!
-    // TODO: App crashes when trying to add the bitmap to my Realtime Database
-    private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if(result.resultCode == Activity.RESULT_OK) {
-            photoTakenFile = photoDir.absoluteFile
+    // This handles the returned intent from the cmaer activity
+    private val resultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                photoTakenFile = photoDir.absoluteFile
+            } else {
+                Snackbar.make(
+                    requireView(),
+                    "The photo was not properly received.",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
         }
-        else {
-            Snackbar.make(requireView(), "The photo was not properly received.", Snackbar.LENGTH_SHORT).show()
-        }
-    }
 
     private var numPlantsFound = 0
 
@@ -143,14 +146,14 @@ class MapsFragment : Fragment() {
     private fun getResponseUsingCoroutine(googleMap: GoogleMap) {
         homeVM.observeFoundPlantList.observe(this, { response ->
             response.plants?.forEach { plantNode ->
-                Log.d(LOG, "Count == $count")
-                if(count < numPlantsFound) {
+                if (count < numPlantsFound) {
                     val coords = LatLng(plantNode.lat, plantNode.long)
                     val marker = googleMap.addMarker(
                         MarkerOptions()
                             .position(coords)
                             .title(plantNode.plantAdded.commonName)
-                            .snippet(plantNode.dateFound))
+                            .snippet(plantNode.dateFound)
+                    )
                     homeVM.addNewMarker(marker!!)
                     count += 1
                     Log.d(LOG, "Iteration #${count}")
@@ -186,13 +189,9 @@ class MapsFragment : Fragment() {
         val arrayAdapter: ArrayAdapter<String> = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_expandable_list_item_1,
-            homeVM.getPlantCommonNames())
+            homeVM.getPlantCommonNames()
+        )
         plantName.setAdapter(arrayAdapter)
-
-        homeVM.getPhotoTakenOfPlant.observe(requireActivity(), {
-            Log.d(LOG, "A picture has been added.")
-            layout.findViewById<ImageView>(R.id.retrieved_photo).setImageBitmap(it!!)
-        })
 
         val takePhotoBtn: ImageButton = layout.findViewById(R.id.take_photo_btn)
         val selectPhotoBtn: ImageButton = layout.findViewById(R.id.select_photo_button)
@@ -200,7 +199,11 @@ class MapsFragment : Fragment() {
         takePhotoBtn.setOnClickListener {
             // FileProvider allows the sharing of "content" or photo's in our case to be much more secure
             val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            val fileProvider = FileProvider.getUriForFile(requireContext(), "com.example.forager.fragments.file_provider", photoDir)
+            val fileProvider = FileProvider.getUriForFile(
+                requireContext(),
+                "com.example.forager.fragments.file_provider",
+                photoDir
+            )
             takePhotoIntent.apply { putExtra(MediaStore.EXTRA_OUTPUT, fileProvider) }
             try {
                 resultLauncher.launch(takePhotoIntent)
@@ -208,7 +211,8 @@ class MapsFragment : Fragment() {
                 Snackbar.make(
                     requireView(),
                     "Error opening the Camera app: $e",
-                    Snackbar.LENGTH_SHORT).show()
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
         selectPhotoBtn.setOnClickListener {
@@ -217,31 +221,44 @@ class MapsFragment : Fragment() {
 
         val dialogBox = AlertDialog.Builder(requireContext())
         dialogBox.setCancelable(true).setView(layout)
-            .setPositiveButton("Submit") {dialog, i ->
+            .setPositiveButton("Submit") { dialog, i ->
                 val plantNotes: TextInputEditText = layout.findViewById(R.id.plant_notes_ET)
                 val plantToAdd = homeVM.findPlantNode(plantName.text.toString())
-                if(plantToAdd != null) {
-                    val marker = googleMap.addMarker(MarkerOptions()
-                        .position(coords)
-                        .title(plantName.text.toString())
-                        .snippet(formattedDate))
+                if (plantToAdd != null) {
+                    val marker = googleMap.addMarker(
+                        MarkerOptions()
+                            .position(coords)
+                            .title(plantName.text.toString())
+                            .snippet(formattedDate)
+                    )
                     val plantNodeUid = UUID.randomUUID().toString()
-                    if(photoTakenFile != null) {
-                        homeVM.addPlantPhotoToCloudStorage(photoTakenFile!!.absoluteFile, plantNodeUid)
+
+
+                    // This works so far! But, I think it doesn't load into the RecyclerView because it takes time
+                    if (photoTakenFile != null) {
+                        homeVM.addPlantPhotoToCloudStorage(
+                            photoTakenFile!!.absoluteFile,
+                            plantNodeUid,
+                            coords,
+                            plantToAdd,
+                            plantNotes.text.toString()
+                        )
                     }
                     homeVM.incrementPlantsFound(numPlantsFound)
-                    homeVM.addPlantToDB(
-                        coords,
-                        plantToAdd,
-                        plantNotes.text.toString(),
-                        plantNodeUid
-                    )
+//                    homeVM.addPlantToDB(
+//                        coords,
+//                        plantToAdd,
+//                        plantNotes.text.toString(),
+//                        plantNodeUid
+//                    )
                     homeVM.addNewMarker(marker!!)
-                }
-                else Snackbar.make(
-                        requireView(),
-                        "Please enter a valid plant name.",
-                        Snackbar.LENGTH_SHORT).show()
+
+
+                } else Snackbar.make(
+                    requireView(),
+                    "Please enter a valid plant name.",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }.show()
     }
 
@@ -260,13 +277,12 @@ class MapsFragment : Fragment() {
 
         // Getting the user's number of plants found count so I can increment it when adding another plant
         /* Made some changes here, I casted the variable passed by the callback and checked for exceptions */
-        homeVM.getNumberOfPlantsFound(object: MyCallback {
+        homeVM.getNumberOfPlantsFound(object : MyCallback {
             override fun getDataFromDB(data: Any?) {
                 val response = data as String?
-                if(response != null) {
+                if (response != null) {
                     numPlantsFound = data.toString().toInt()
-                }
-                else Log.d(LOG, "Exception when loading number of plants found.")
+                } else Log.d(LOG, "Exception when loading number of plants found.")
             }
         })
 

@@ -18,7 +18,8 @@ private const val LOG = "PlantDatabaseHelper:"
  *
  * @author Tylor J. Hanshaw
  */
-class PlantsDatabaseHelper(val context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
+class PlantsDatabaseHelper(val context: Context) :
+    SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
 
     /**
      * Companion object used to store the SQLite database name and current version.
@@ -51,7 +52,7 @@ class PlantsDatabaseHelper(val context: Context) : SQLiteOpenHelper(context, DB_
 
     @Synchronized
     private fun installOrUpdateIfNecessary() {
-        if(installedDatabaseIsOutdated()) {
+        if (installedDatabaseIsOutdated()) {
             context.deleteDatabase(DB_NAME)
             installDatabaseFromAssets()
             writeDatabaseVersionInPreferences()

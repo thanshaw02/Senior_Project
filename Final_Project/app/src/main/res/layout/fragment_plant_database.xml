@@ -8,10 +8,42 @@
     tools:context=".fragments.PlantDatabaseFragment"
     android:fitsSystemWindows="true">
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/search_bar_local_plants"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="300dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/search_plants_ET"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:hint="Search Common Name's"
+            android:inputType="text"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@color/light_gray"
+        app:layout_constraintTop_toBottomOf="@+id/search_bar_local_plants"
+        app:layout_constraintBottom_toTopOf="@+id/plant_database_RV" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/plant_database_RV"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="75dp"
         android:paddingTop="5dp"
         android:paddingBottom="5dp"
         app:layout_constraintBottom_toBottomOf="parent"

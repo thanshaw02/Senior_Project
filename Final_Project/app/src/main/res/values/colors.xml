@@ -41,4 +41,5 @@
     <!-- Navigation colors -->
     <color name="light_gray">#989797</color>
     <color name="divider">#D8D6D6</color>
+    <color name="search_query_color">#A6cfd8dc</color>
 </resources>

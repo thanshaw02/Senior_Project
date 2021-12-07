@@ -25,6 +25,9 @@ import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.lang.Exception
 import android.database.CursorWindow
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.example.forager.fragments.PlantDatabaseFragment
 import java.lang.reflect.Field
 
 interface MyCallback {
@@ -45,7 +48,7 @@ object DataRepository {
     // Remote data source
     private var remoteDataSource = FirebaseDatabase.getInstance()
 
-                                        /* LOCAL DATA */
+    /* LOCAL DATA */
     /**********************************************************************************************/
 
     // If I do end up storing the local plants in a MutableList, store it in a ViewModel!!!!!!
@@ -63,12 +66,7 @@ object DataRepository {
         // val localPlantData: MutableList<Plant> = mutableListOf() // this is new, and so is the return type for this function
         val ld = PlantsDatabaseHelper(context).readableDatabase
         val cursor = ld.rawQuery("SELECT * FROM Plants", null)
-        while(cursor.moveToNext()) {
-//            val photoAsBitmap = BitmapFactory.decodeByteArray(
-//                cursor.getBlobOrNull(cursor.getColumnIndexOrThrow("Plant Photo")),
-//                0,
-//                cursor.getBlobOrNull(cursor.getColumnIndexOrThrow("Plant Photo"))!!.size
-//            )
+        while (cursor.moveToNext()) {
             localPlantData.add(
                 Plant(
                     cursor.getString(cursor.getColumnIndexOrThrow("Common Name")),
@@ -77,8 +75,9 @@ object DataRepository {
                     cursor.getString(cursor.getColumnIndexOrThrow("Color")),
                     cursor.getString(cursor.getColumnIndexOrThrow("Sun")),
                     cursor.getString(cursor.getColumnIndexOrThrow("Height")),
-//                    photoAsBitmap
-                ))
+                    cursor.getString(cursor.getColumnIndexOrThrow("Photo URL")),
+                )
+            )
             plantCommonNames.add(cursor.getString(cursor.getColumnIndexOrThrow("Common Name")))
         }
         cursor.close()
@@ -92,27 +91,48 @@ object DataRepository {
         }
     }
 
-                                            /* REALTIME DATA */
+    /* REALTIME DATA */
     /**********************************************************************************************/
 
     // Initializing database references, FirebaseAuth
-    private val firebaseAuth = Firebase.auth // Auth used for FirebaseAuth operations and RealtimeDatabase
+    private val firebaseAuth =
+        Firebase.auth // Auth used for FirebaseAuth operations and RealtimeDatabase
     private var plantsFoundDBRef = remoteDataSource.getReference("Plants_Found")
     private var userDBRef = remoteDataSource.getReference("Users")
 
     // Use this variable to upload the user's photo taken of their plant
     private val firebaseStorage = FirebaseStorage.getInstance().reference
-    private val plantImageStorageRef = firebaseStorage.child("plant_photos")
+    private val personalPlantImageStorageRef = firebaseStorage.child("plant_photos")
+    private val localPlantImageStorageRef = firebaseStorage.child("local_plant_photos")
+
+    private val plantAddedToDB: MutableLiveData<PlantListNode> = MutableLiveData()
+    val getPlantAddedToDB: LiveData<PlantListNode> get() = plantAddedToDB
 
 
-    suspend fun addPlantPhotoToCloudStorage(photo: File?, plantUid: String) {
+    suspend fun addPlantPhotoToCloudStorage(photo: File?, plantUid: String, nodeToAdd: PlantListNode) {
         withContext(Dispatchers.IO) {
-            val userStorageRef = plantImageStorageRef.child(firebaseAuth.currentUser!!.uid).child(plantUid)
+            val userStorageRef = personalPlantImageStorageRef
+                .child(firebaseAuth.currentUser!!.uid).child(nodeToAdd.getUID())
             val photoUri = Uri.fromFile(photo)
-            Log.d(LOG, "Photo to adds URI: $photoUri")
             userStorageRef.putFile(photoUri).addOnCompleteListener { result ->
-                if(result.isSuccessful) Log.d(LOG, "Photo file URU successfully added to Cloud Storage")
-                else Log.d(LOG, "Photo file URI unsuccessfully added to Cloud Storage")
+                if (result.isSuccessful) {
+                    Log.d(LOG, "Photo file URU successfully added to Cloud Storage")
+                    userStorageRef.downloadUrl.addOnCompleteListener {
+                        if(it.isSuccessful) {
+                            val photoUrl = it.result
+                            nodeToAdd.setPlantPhotoUriNode(photoUrl.toString())
+                            plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(nodeToAdd.getUID())
+                                .setValue(nodeToAdd).addOnCompleteListener {
+                                    if(it.isSuccessful) {
+                                        plantAddedToDB.value = nodeToAdd
+                                        Log.d(LOG, "I have retrieved the photo URL!")
+                                    }
+                                    else Log.d(LOG, "Something went wrong.. horribly wrong.")
+                                }
+                        }
+                    }
+                }
+                else Log.e(LOG, "Photo file URI unsuccessfully added to Cloud Storage")
             }.await()
             Log.d(LOG, "Download URL: ${userStorageRef.downloadUrl.await()}")
         }
@@ -122,24 +142,26 @@ object DataRepository {
         withContext(Dispatchers.IO) {
             firebaseStorage.child(plantPhotoUrl).delete()
                 .addOnCompleteListener {
-                    if(it.isSuccessful) Log.d(LOG, "Photo was successfully removed.")
-                    else Log.d(LOG, "Photo was not removed.")
+                    if (it.isSuccessful) Log.d(LOG, "Photo was successfully removed.")
+                    else Log.e(LOG, "Photo was not removed.")
                 }
         }
     }
 
     // Figured using a callback function here would be easier than coroutines??
-    fun getPlantPhotoFromCloudStorage(plantPhotoUri: String, callback: MyCallback) {
-        val localFile = File.createTempFile("tempFileImage", "jpeg")
+    fun getPersonalPlantPhotoFromCloudStorage(plantPhotoUri: String, callback: MyCallback) {
+        val localFile = File.createTempFile("tempImageFile", "jpeg")
         firebaseStorage.child(plantPhotoUri).getFile(localFile).addOnCompleteListener {
-            if(it.isSuccessful) {
-                Log.d(LOG, "Successfully retrieved plant photo: ${it.result}")
+            if (it.isSuccessful) {
                 val photoAsBitmap = BitmapFactory.decodeFile(localFile.absolutePath)
-                callback.getDataFromDB(photoAsBitmap) // Converting the photo Uri to a file here
-            }
-            else Log.d(LOG, "Photo was not retrieved.")
+                callback.getDataFromDB(photoAsBitmap) // Converting the photo Uri to a Bitmap
+            } else Log.e(LOG, "Photo was not retrieved.")
         }
     }
+
+//    fun getUrlForPlantPhoto(plantUid: String): LiveData<PlantListNode> {
+//
+//    }
 
     // Grabbing the user's found plant list using a callback
     // Not currently using this, and probably won't in the future
@@ -150,11 +172,10 @@ object DataRepository {
     fun getUsersPreviousPlantsFoundList(callback: MyCallback) {
         plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).get().addOnCompleteListener {
             val response = DataResponse()
-            if(it.isSuccessful) {
+            if (it.isSuccessful) {
                 val result = it.result
                 response.dataSnapshot = result
-            }
-            else {
+            } else {
                 response.exception = it.exception
             }
             callback.getDataFromDB(response)
@@ -176,8 +197,7 @@ object DataRepository {
                         Plant(
                             snapShot.child("plantAdded").child("commonName").value
                                 .toString(),
-                            snapShot.child("plantAdded").child("scientificName").value.
-                            toString(),
+                            snapShot.child("plantAdded").child("scientificName").value.toString(),
                             snapShot.child("plantAdded").child("plantType").value
                                 .toString().toInt(),
                             snapShot.child("plantAdded").child("plantColor").value
@@ -193,7 +213,7 @@ object DataRepository {
                     )
                     node.setUID(snapShot.key) // Instead of auto-generating a uid, I just need to uid given to the plant node previously
                     node
-            }.toMutableList()
+                }.toMutableList()
         } catch (ex: Exception) {
             dataResponse.exception = ex
         }
@@ -227,12 +247,11 @@ object DataRepository {
         userDBRef.child(firebaseAuth.currentUser!!.uid).child("fullName").get()
             .addOnCompleteListener {
                 val response = StringDataResponse()
-                if(it.isSuccessful) {
+                if (it.isSuccessful) {
                     val result = it.result
                     response.data = result.value.toString()
                     callback.getDataFromDB(response)
-                }
-                else {
+                } else {
                     response.exception = it.exception
                     callback.getDataFromDB(response)
                 }
@@ -246,13 +265,13 @@ object DataRepository {
     fun getNumberOfPlantsFound(callback: MyCallback) {
         userDBRef.child(firebaseAuth.currentUser!!.uid)
             .child("numPlantsFound")
-            .addValueEventListener(object: ValueEventListener {
+            .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val number = snapshot.value
                     callback.getDataFromDB(number.toString())
                 }
 
-                override fun onCancelled(error: DatabaseError) { }
+                override fun onCancelled(error: DatabaseError) {}
             })
     }
 
@@ -264,21 +283,24 @@ object DataRepository {
     }
 
     fun removePlantFromDB(uid: String) {
-        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(uid).removeValue().addOnCompleteListener {
-            if(it.isSuccessful) Log.d(LOG, "Removed plant successfully! Plant uid was: $uid")
-            else Log.d(LOG, "Was not successful in removing the plant with the uid of: $uid")
-        }
+        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(uid).removeValue()
+            .addOnCompleteListener {
+                if (it.isSuccessful) Log.d(LOG, "Removed plant successfully! Plant uid was: $uid")
+                else Log.d(LOG, "Was not successful in removing the plant with the uid of: $uid")
+            }
     }
 
     suspend fun incrementPlantsFound(increment: Int) {
         withContext(Dispatchers.IO) {
-            userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").setValue(increment).await()
+            userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound")
+                .setValue(increment).await()
         }
     }
 
     suspend fun decrementPlantsFound(decrement: Int) {
         withContext(Dispatchers.IO) {
-            userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound").setValue(decrement).await()
+            userDBRef.child(firebaseAuth.currentUser!!.uid).child("numPlantsFound")
+                .setValue(decrement).await()
         }
     }
 
@@ -286,21 +308,22 @@ object DataRepository {
 //                                              LOGIN/REGISTER CODE BELOW
 //    /***************************************************************************************************************************/
 
-    fun signOut() { firebaseAuth.signOut() }
+    fun signOut() {
+        firebaseAuth.signOut()
+    }
 
     suspend fun singInWithEmail(act: Activity, email: String, password: String) =
         withContext(Dispatchers.IO) {
             firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(act) { task ->
-                    if(task.isSuccessful) {
+                    if (task.isSuccessful) {
                         // Updates the UI here
                         // Moves the user to the map portion of the app with their account information
                         Log.d(LOG, "signedInWithEmail:success")
                         val user = firebaseAuth.currentUser
                         //goToHomeScreen(user!!)
 //                    homeVM.getUserInfoAsync()
-                    }
-                    else {
+                    } else {
                         // Sign in failed, entered wrong information
                         Log.w(LOG, "signedInWithEmail:failure", task.exception)
                     }
@@ -310,21 +333,25 @@ object DataRepository {
     // Trying to remove the use info all in one suspend function here
     suspend fun reAuthenticateUser(email: String, password: String) {
         withContext(Dispatchers.IO) {
-            firebaseAuth.currentUser!!.reauthenticate(EmailAuthProvider.getCredential(email, password))
+            firebaseAuth.currentUser!!.reauthenticate(
+                EmailAuthProvider.getCredential(
+                    email,
+                    password
+                )
+            )
                 .addOnCompleteListener {
-                    if(it.isSuccessful) {
+                    if (it.isSuccessful) {
                         Log.d(LOG, "Successfully delete the user's auth account.")
                         deleteUserAuth()
                         signOut()
-                    }
-                    else Log.d(LOG, "Failed to re-authenticate user.")
+                    } else Log.d(LOG, "Failed to re-authenticate user.")
                 }
         }
     }
 
     private fun deleteUserAuth() {
         firebaseAuth.currentUser!!.delete().addOnCompleteListener {
-            if(it.isSuccessful) Log.d(LOG, "Fully deleted the user's profile.")
+            if (it.isSuccessful) Log.d(LOG, "Fully deleted the user's profile.")
             else Log.d(LOG, "Failed to delete user's auth.")
         }
     }

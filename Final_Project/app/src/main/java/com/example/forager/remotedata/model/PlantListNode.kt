@@ -24,9 +24,7 @@ import java.util.*
  * @param dateFound [String]
  * @param uid [UUID] - A unique identifier that is excluded from the RealtimeDatabase and instead used
  * as a unique 'key' when adding the plant to the user's personal plant list.
- * @param isExpanded Excluded variable used for displaying detail in the extended menu of plants in both
- * [PersonalPlantListFragment][com.example.forager.fragments.PersonalPlantListFragment] fragment and
- * [PlantDatabaseFragment][com.example.forager.fragments.PlantDatabaseFragment] fragment.
+ * @param plantPhotoUri [String]? - Holds the file path to the photo taken by user in Firebase storage.
  *
  * @author Tylor J. Hanshaw
  */
@@ -37,9 +35,8 @@ data class PlantListNode(
     val plantAdded: Plant = Plant(),
     val plantNotes: String = "",
     val dateFound: String = "",
-    val plantPhotoUri: String? = "", // If the user doesn't want to add a photo they do not have to
+    var plantPhotoUri: String? = "", // If the user doesn't want to add a photo they do not have to
     @Exclude private var uid: String? = UUID.randomUUID().toString(),
-    @Exclude private var isExpanded: Boolean = false
 ) {
 
     /**
@@ -69,35 +66,9 @@ data class PlantListNode(
         uid = newUid
     }
 
-    /**
-     * Member function used primarily to exclude the associated member variable [isExpanded]
-     * from being added to my RealtimeDatabase when a new user finds a plant. But also used in
-     * the [PlantDatabaseFragment][com.example.forager.fragments.PlantDatabaseFragment] to
-     * open/close the extended menu for each plant.
-     *
-     * @sample [com.example.forager.fragments.PlantDatabaseFragment.PlantDBHolder.bindView]
-     * @see isExpanded
-     * @return [Boolean]
-     *
-     * @author Tylor J. Hanshaw
-     */
     @Exclude
-    fun getIsExpanded(): Boolean = isExpanded
-
-    /**
-     * Member function used primarily to exclude the associated member variable [isExpanded]
-     * from being added to my RealtimeDatabase when a new user finds a plant. But also used in
-     * the PlantDatabaseFragment to open/close the extended menu for each plant.
-     *
-     * @sample [com.example.forager.fragments.PlantDatabaseFragment.PlantDBHolder.bindView]
-     * @param expand [Boolean]
-     * @see isExpanded
-     *
-     * @author Tylor J. Hanshaw
-     */
-    @Exclude
-    fun setIsExpanded(expand: Boolean) {
-        isExpanded = expand
+    fun setPlantPhotoUriNode(uri: String) {
+        plantPhotoUri = uri
     }
 
 }

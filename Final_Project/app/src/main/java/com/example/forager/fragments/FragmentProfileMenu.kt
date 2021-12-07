@@ -19,7 +19,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import com.example.forager.R
 import com.example.forager.remotedata.model.User
-import com.example.forager.repository.login.LoginActivity
+import com.example.forager.activities.login.LoginActivity
 import com.example.forager.viewmodel.HomeViewModel
 import com.google.android.material.snackbar.Snackbar
 
