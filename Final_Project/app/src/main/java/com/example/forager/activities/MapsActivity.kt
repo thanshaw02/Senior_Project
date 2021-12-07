@@ -100,18 +100,18 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         menuNavView = binding.myNavigationView
         val toolBar = binding.navBar
 
+        // This is for keep my app in "full screen" mode
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         // This uses coroutines to set the logged in user's info
         setUsersInfoWindow()
 
-        // This observes any changes made to the user's plant count
+        // This observes any changes made to the user's plant count only when a plant is added
         homeVM.getTheNumOfPlants.observeForever(numPlantsObserver)
-
-        // This is for keep my app in "full screen" mode, sort of
-        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         homeVM.localDataInit(this) // Initializing local data (mainly for the auto-complete feature)
 
-        // This is to update the mini user area in my menu drawer
+        // This is to update menu header area with the user's data
         // The first time the menu is opened everything is initialized (full name, username, num plants found)
         // All other times only the amount of plants found is updated
         toolBar.setNavigationOnClickListener {
@@ -237,6 +237,18 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
             .hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
     }
 
+    companion object {
+        /**
+         * Use this companion object to create an intent for MainActivity
+         *
+         * @param context [Context]
+         * @return [Intent]
+         *
+         * @author Tylor J. Hanshaw
+         */
+        fun newInstance(context: Context): Intent = Intent(context, MapsActivity::class.java)
+    }
+
     /**
      *  Called when the user manually logs out via the [NavigationView] menu.
      *
@@ -250,18 +262,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private fun logOut() {
         homeVM.logout()
         goToLogin()
-    }
-
-    companion object {
-        /**
-         * Use this companion object to create an intent for MainActivity
-         *
-         * @param context [Context]
-         * @return [Intent]
-         *
-         * @author Tylor J. Hanshaw
-         */
-        fun newInstance(context: Context): Intent = Intent(context, MapsActivity::class.java)
     }
 
     /**

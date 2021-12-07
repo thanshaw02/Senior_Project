@@ -27,8 +27,6 @@ import java.lang.Exception
 import android.database.CursorWindow
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.forager.fragments.PlantDatabaseFragment
-import java.lang.reflect.Field
 
 interface MyCallback {
     fun getDataFromDB(data: Any?) // Takes a parameter of type "Any?", allowing me to use this for almost anything
@@ -109,7 +107,7 @@ object DataRepository {
     val getPlantAddedToDB: LiveData<PlantListNode> get() = plantAddedToDB
 
 
-    suspend fun addPlantPhotoToCloudStorage(photo: File?, plantUid: String, nodeToAdd: PlantListNode) {
+    suspend fun addPlantPhotoToCloudStorage(photo: File?, nodeToAdd: PlantListNode) {
         withContext(Dispatchers.IO) {
             val userStorageRef = personalPlantImageStorageRef
                 .child(firebaseAuth.currentUser!!.uid).child(nodeToAdd.getUID())
@@ -197,7 +195,8 @@ object DataRepository {
                         Plant(
                             snapShot.child("plantAdded").child("commonName").value
                                 .toString(),
-                            snapShot.child("plantAdded").child("scientificName").value.toString(),
+                            snapShot.child("plantAdded").child("scientificName").value
+                                .toString(),
                             snapShot.child("plantAdded").child("plantType").value
                                 .toString().toInt(),
                             snapShot.child("plantAdded").child("plantColor").value
@@ -211,7 +210,7 @@ object DataRepository {
                         snapShot.child("dateFound").value.toString(),
                         snapShot.child("plantPhotoUri").value.toString()
                     )
-                    node.setUID(snapShot.key) // Instead of auto-generating a uid, I just need to uid given to the plant node previously
+                    node.setUID(snapShot.key)
                     node
                 }.toMutableList()
         } catch (ex: Exception) {
@@ -337,9 +336,7 @@ object DataRepository {
                 EmailAuthProvider.getCredential(
                     email,
                     password
-                )
-            )
-                .addOnCompleteListener {
+                )).addOnCompleteListener {
                     if (it.isSuccessful) {
                         Log.d(LOG, "Successfully delete the user's auth account.")
                         deleteUserAuth()

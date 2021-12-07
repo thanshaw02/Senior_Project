@@ -43,13 +43,13 @@ class HomeViewModel : ViewModel() {
 
     fun searchForPlantLocally(query: String): MutableList<Plant> {
         return DataRepository.getLocalPlantData.filter { plant ->
-            plant.commonName.contains(query)
+            plant.commonName.lowercase().contains(query.lowercase())
         } as MutableList<Plant>
     }
 
     fun searchForPlantRemotely(query: String): MutableList<PlantListNode> {
         return personalPlantList.filter { plantNode ->
-            plantNode.plantAdded.commonName.contains(query)
+            plantNode.plantAdded.commonName.lowercase().contains(query.lowercase())
         } as MutableList<PlantListNode>
     }
 
@@ -97,13 +97,6 @@ class HomeViewModel : ViewModel() {
     /**********************************************************************************************/
 
     private val auth = FirebaseAuth.getInstance()
-
-    private val photoTakenOfPlant: MutableLiveData<Bitmap> = MutableLiveData()
-    val getPhotoTakenOfPlant: LiveData<Bitmap> get() = photoTakenOfPlant
-
-    fun addPhotoTakenOfPlant(photo: Bitmap) {
-        photoTakenOfPlant.value = photo
-    }
 
     // These two functions and LiveData handle adding or removing a plant from/to the database
     private val newPlantListNode: MutableLiveData<PlantListNode> = MutableLiveData()
@@ -217,11 +210,9 @@ class HomeViewModel : ViewModel() {
                 plantToAdd,
                 plantNotes,
                 getCurrentDate(),
-                "/plant_photos/${FirebaseAuth.getInstance().currentUser!!.uid}/$plantNodeUid",
                 plantNodeUid
             )
-            DataRepository.addPlantPhotoToCloudStorage(photo, plantNodeUid, newNode)
-
+            DataRepository.addPlantPhotoToCloudStorage(photo, newNode)
         }
     }
 
@@ -250,24 +241,6 @@ class HomeViewModel : ViewModel() {
                 DataRepository.deletePlantPhotoFromCloudStorage(plantPhotoUrl)
             }
         } else Log.d(LOG, "This plant entry has no photo associated with it.")
-    }
-
-    /**
-     * Used to get a plant photo from the Firebase storage for displaying in the
-     * [PersonalPlantListFragment][com.example.forager.fragments.PlantDatabaseFragment]
-     *
-     * @see [DataRepository.getPersonalPlantPhotoFromCloudStorage]
-     * @param plantPhotoUri File path of the photo needed for the
-     * [PersonalPlantList][com.example.forager.fragments.PlantDatabaseFragment].
-     * @param callback [MyCallback] interface used as a callback function
-     *
-     * @author Tylor J. Hanshaw
-     */
-    fun getPersonalPlantPhotoFromCloudStorage(plantPhotoUri: String?, callback: MyCallback) {
-        if (plantPhotoUri != null) {
-            DataRepository.getPersonalPlantPhotoFromCloudStorage(plantPhotoUri, callback)
-        } else Log.e(LOG, "This plant entry has no photo associated with it.")
-
     }
 
     /**

@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
+import android.text.TextUtils
 import android.text.TextWatcher
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -55,7 +56,6 @@ class PersonalPlantListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private var personalPlantAdaptor: PersonalPlantListAdapter? = null
-    private lateinit var plantSearch: EditText
 
     private var numPlantsFound = 0
 
@@ -74,19 +74,6 @@ class PersonalPlantListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_personal_plant_list, container, false)
-
-        plantSearch = view.findViewById(R.id.search_plants_ET)
-        plantSearch.addTextChangedListener(object: TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
-
-            override fun onTextChanged(query: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                if(query != "") personalPlantAdaptor!!.setData(homeVM.searchForPlantRemotely(query!!.toString()))
-                else personalPlantAdaptor!!.setData(homeVM.getPersonalPlantList.toMutableList())
-            }
-
-            override fun afterTextChanged(p0: Editable?) { }
-
-        })
 
         // Using a callback to get the user's plant found count
         // Also using this to display a message to the user if they have no plants added to their list
@@ -115,12 +102,6 @@ class PersonalPlantListFragment : Fragment() {
             layoutManager = GridLayoutManager(context, 2)
         }
 
-        // This works! I am now storing the URL of the photo taken
-        // Instead of storing the file path in Firebase Storage the URL will just load it up driectly
-        homeVM.waitForNewNodeAdded.observe(requireActivity(), { node ->
-            personalPlantAdaptor?.updateRecyclerView(node)
-        })
-
         // This observes any changes made to my "getNewPlantListNode" LiveData
         // See above for the associated Observer
         //homeVM.getNewPlantListNode.observeForever(observer)
@@ -128,6 +109,13 @@ class PersonalPlantListFragment : Fragment() {
         // this allows the user's found plant list to be fully loaded in on log-in
         homeVM.observeFoundPlantList.observe(requireActivity(), { response ->
             personalPlantAdaptor = PersonalPlantListAdapter(response.plants!!)
+        })
+
+        // This works! I am now storing the URL of the photo taken
+        // Instead of storing the file path in Firebase Storage the URL will just load it up directly
+        homeVM.waitForNewNodeAdded.observe(requireActivity(), { node ->
+            Log.d(LOG, "New node has been added to the RecyclerView.")
+            personalPlantAdaptor!!.updateRecyclerView(node)
         })
 
         ItemTouchHelper(personalPlantAdaptor!!.itemTouchHelper).attachToRecyclerView(recyclerView)
@@ -181,17 +169,7 @@ class PersonalPlantListFragment : Fragment() {
             commonName.text = plantNode!!.plantAdded.commonName
             scientificName.text = homeVM.checkNameLengths(plantNode.plantAdded)
 
-//            homeVM.getPersonalPlantPhotoFromCloudStorage(plantNode.plantPhotoUri, object: MyCallback {
-//                override fun getDataFromDB(data: Any?) {
-////                    plantPhoto.setImageBitmap(data as Bitmap)
-//                    Glide.with(this@PersonalPlantListFragment)
-//                        .load(data as Bitmap)
-//                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-//                        .into(plantPhoto)
-//                }
-//            })
-
-//             New way of getting the plant photo using Glide and storing the photo URI in the PlantListNode
+            // New way of getting the plant photo using Glide and storing the photo URI in the PlantListNode
             Glide.with(this@PersonalPlantListFragment).load(plantNode.plantPhotoUri)
                 .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                 .into(plantPhoto)
@@ -260,7 +238,7 @@ class PersonalPlantListFragment : Fragment() {
         // Custom function for updating the user's found plant list
         fun updateRecyclerView(plantListNodeToAdd: PlantListNode) {
             personalPlantList.add(plantListNodeToAdd)
-            notifyItemInserted(personalPlantList.size - 1)
+            notifyDataSetChanged()
         }
 
         private fun setSwipeBehavior(view: View) {

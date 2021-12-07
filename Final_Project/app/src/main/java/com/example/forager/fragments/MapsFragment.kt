@@ -245,12 +245,6 @@ class MapsFragment : Fragment() {
                         )
                     }
                     homeVM.incrementPlantsFound(numPlantsFound)
-//                    homeVM.addPlantToDB(
-//                        coords,
-//                        plantToAdd,
-//                        plantNotes.text.toString(),
-//                        plantNodeUid
-//                    )
                     homeVM.addNewMarker(marker!!)
 
 
