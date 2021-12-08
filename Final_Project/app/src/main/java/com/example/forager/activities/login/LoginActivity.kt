@@ -52,12 +52,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // This is for my loading screen animation after logging in
-        // Right now I need to figure out how to display then when retrieving data or working with data from my Realtime Database
-        // loadingAnimationView = binding.loginLoading
-        // loadingAnimationView.setAnimation(R.raw.loading_screen)
-        // loadingAnimationView.playAnimation()
-
         // This is for singing in via Google
         // Not surrently working!
         gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -149,20 +143,5 @@ class LoginActivity : AppCompatActivity() {
         if ((currentUser != null)) {
             goToHomeScreen()
         }
-    }
-
-    override fun onPause() {
-        Log.d(LOG, "onPause() called")
-        super.onPause()
-    }
-
-    override fun onStop() {
-        Log.d(LOG, "onStop() called")
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        Log.d(LOG, "onDestroy() called")
-        super.onDestroy()
     }
 }

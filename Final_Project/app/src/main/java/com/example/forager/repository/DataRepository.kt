@@ -107,6 +107,10 @@ object DataRepository {
     val getPlantAddedToDB: LiveData<PlantListNode> get() = plantAddedToDB
 
 
+    // Uploading the photo taken by the user to Firebase Storage and if successful attempting to
+    // download the URL of that uploaded photo.
+    // If downloading the URL is successful then I'm adding that URL to the PlantListNode instance
+    // and adding that to the Realtime Database with the URL linking that node to the uploaded photo.
     suspend fun addPlantPhotoToCloudStorage(photo: File?, nodeToAdd: PlantListNode) {
         withContext(Dispatchers.IO) {
             val userStorageRef = personalPlantImageStorageRef
@@ -114,28 +118,24 @@ object DataRepository {
             val photoUri = Uri.fromFile(photo)
             userStorageRef.putFile(photoUri).addOnCompleteListener { result ->
                 if (result.isSuccessful) {
-                    Log.d(LOG, "Photo file URU successfully added to Cloud Storage")
                     userStorageRef.downloadUrl.addOnCompleteListener {
                         if(it.isSuccessful) {
                             val photoUrl = it.result
                             nodeToAdd.setPlantPhotoUriNode(photoUrl.toString())
                             plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(nodeToAdd.getUID())
                                 .setValue(nodeToAdd).addOnCompleteListener {
-                                    if(it.isSuccessful) {
-                                        plantAddedToDB.value = nodeToAdd
-                                        Log.d(LOG, "I have retrieved the photo URL!")
-                                    }
-                                    else Log.d(LOG, "Something went wrong.. horribly wrong.")
+                                    if(it.isSuccessful) plantAddedToDB.value = nodeToAdd
+                                    else Log.e(LOG, "Something went wrong.. horribly wrong.")
                                 }
                         }
                     }
                 }
                 else Log.e(LOG, "Photo file URI unsuccessfully added to Cloud Storage")
             }.await()
-            Log.d(LOG, "Download URL: ${userStorageRef.downloadUrl.await()}")
         }
     }
 
+    // Physically deleting the photo associated with the removed plant from Firebase Storage
     suspend fun deletePlantPhotoFromCloudStorage(plantPhotoUrl: String) {
         withContext(Dispatchers.IO) {
             firebaseStorage.child(plantPhotoUrl).delete()
@@ -143,40 +143,6 @@ object DataRepository {
                     if (it.isSuccessful) Log.d(LOG, "Photo was successfully removed.")
                     else Log.e(LOG, "Photo was not removed.")
                 }
-        }
-    }
-
-    // Figured using a callback function here would be easier than coroutines??
-    fun getPersonalPlantPhotoFromCloudStorage(plantPhotoUri: String, callback: MyCallback) {
-        val localFile = File.createTempFile("tempImageFile", "jpeg")
-        firebaseStorage.child(plantPhotoUri).getFile(localFile).addOnCompleteListener {
-            if (it.isSuccessful) {
-                val photoAsBitmap = BitmapFactory.decodeFile(localFile.absolutePath)
-                callback.getDataFromDB(photoAsBitmap) // Converting the photo Uri to a Bitmap
-            } else Log.e(LOG, "Photo was not retrieved.")
-        }
-    }
-
-//    fun getUrlForPlantPhoto(plantUid: String): LiveData<PlantListNode> {
-//
-//    }
-
-    // Grabbing the user's found plant list using a callback
-    // Not currently using this, and probably won't in the future
-    // But this was be trying to fix a bug
-    // The bug is that if you add a plant before opening your personal list, the plant added won't be seen until you re-log
-    // The issue is happening because the observer that observes new nodes added isn't set up until you open your list
-    // So if you open your list and then add plants you will see those added, but if you don't open your list they won't show up
-    fun getUsersPreviousPlantsFoundList(callback: MyCallback) {
-        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).get().addOnCompleteListener {
-            val response = DataResponse()
-            if (it.isSuccessful) {
-                val result = it.result
-                response.dataSnapshot = result
-            } else {
-                response.exception = it.exception
-            }
-            callback.getDataFromDB(response)
         }
     }
 
@@ -281,12 +247,14 @@ object DataRepository {
             .setValue(plantListNode)
     }
 
-    fun removePlantFromDB(uid: String) {
-        plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(uid).removeValue()
-            .addOnCompleteListener {
-                if (it.isSuccessful) Log.d(LOG, "Removed plant successfully! Plant uid was: $uid")
-                else Log.d(LOG, "Was not successful in removing the plant with the uid of: $uid")
-            }
+    suspend fun removePlantFromDB(uid: String) {
+        withContext(Dispatchers.IO) {
+            plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(uid).removeValue()
+                .addOnCompleteListener {
+                    if (it.isSuccessful) Log.d(LOG, "Removed plant successfully! Plant uid was: $uid")
+                    else Log.d(LOG, "Was not successful in removing the plant with the uid of: $uid")
+                }
+        }
     }
 
     suspend fun incrementPlantsFound(increment: Int) {

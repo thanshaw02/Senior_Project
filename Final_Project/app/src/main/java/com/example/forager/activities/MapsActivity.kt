@@ -11,6 +11,7 @@
 
 package com.example.forager.activities
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -19,24 +20,30 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.widget.SearchView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.WindowCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import com.bumptech.glide.Glide
 import com.example.forager.R
 import com.example.forager.databinding.ActivityMapsBinding
 import com.example.forager.databinding.ForagerNavigationHeaderBinding
 import com.example.forager.fragments.*
 import com.example.forager.remotedata.model.User
 import com.example.forager.activities.login.LoginActivity
+import com.example.forager.misc.TrackingUtility
 import com.google.firebase.auth.FirebaseAuth
 import com.example.forager.viewmodel.HomeViewModel
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.switchmaterial.SwitchMaterial
 import java.io.File
 
 private const val LOG = "MapsActivityDEBUG"
@@ -56,13 +63,14 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     // Menu drawer header widgets
     private lateinit var menuHeaderPlantsFound: TextView
     private lateinit var menuTitle: TextView
-
     private lateinit var binding: ActivityMapsBinding
+    private lateinit var toggleBtn: SwitchMaterial
 
     // Menu widgets
-    private lateinit var navHeader: ForagerNavigationHeaderBinding
+    private var navHeader: ForagerNavigationHeaderBinding? = null
     private lateinit var menuLayout: DrawerLayout
-    private lateinit var menuNavView: NavigationView
+    private var menuNavView: NavigationView? = null
+    private lateinit var profilePicture: ImageView
 
     // Creating an instance of FriebaseAuth which will hold on to whoever has logged in
     private lateinit var auth: FirebaseAuth
@@ -70,7 +78,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private lateinit var numPlantsFound: String
 
     private val numPlantsObserver = Observer<String> {
-        Log.d(LOG, "Observation made on number of plants..: $it")
         numPlantsFound = it
     }
 
@@ -83,47 +90,51 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        if (checkSystemForCamera()) {
-            // Able to take a picture of the plant they have found
-            Log.d(LOG, "This device has camera capabilities")
-        } else {
-            // Disable the camera feature for the user
-            Log.d(LOG, "This device does not have camera capabilities")
-        }
+        // This is for keep my app in "full screen" mode
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Checks to see if the device has camera capabilities
+        homeVM.hasCamera = checkSystemForCamera()
 
         auth = FirebaseAuth.getInstance()
         menuTitle = binding.menuTitle
 
         // Menu drawer logic
         navHeader = ForagerNavigationHeaderBinding.inflate(layoutInflater)
+        profilePicture = navHeader!!.userProfilePicture
         menuLayout = binding.drawerLayout
         menuNavView = binding.myNavigationView
         val toolBar = binding.navBar
-
-        // This is for keep my app in "full screen" mode
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        toggleBtn = findViewById(R.id.toggle_markers)
 
         // This uses coroutines to set the logged in user's info
         setUsersInfoWindow()
 
         // This observes any changes made to the user's plant count only when a plant is added
-        homeVM.getTheNumOfPlants.observeForever(numPlantsObserver)
+        homeVM.getTheNumOfPlants.observe(this, numPlantsObserver)
 
-        homeVM.localDataInit(this) // Initializing local data (mainly for the auto-complete feature)
+        homeVM.getProfilePicture.observe(this, {
+            Log.d(LOG, "Profile picture changed in MapsActivity")
+            Glide.with(this).load(it).into(profilePicture)
+        })
 
-        // This is to update menu header area with the user's data
-        // The first time the menu is opened everything is initialized (full name, username, num plants found)
-        // All other times only the amount of plants found is updated
+        // Initializing local data (mainly for the auto-complete feature)
+        homeVM.localDataInit(this)
+
+        // Update meny header with user's information on first log-in
         toolBar.setNavigationOnClickListener {
-            Log.d(LOG, "User's \"numPlantsFound\": ${currentUser.numPlantsFound}")
             menuHeaderPlantsFound.text = numPlantsFound
             menuLayout.openDrawer(GravityCompat.START) // Opens the menu when pressed
         }
 
-        menuNavView.setNavigationItemSelectedListener { menuItem ->
+        menuNavView!!.setNavigationItemSelectedListener { menuItem ->
             menuLayout.closeDrawer(GravityCompat.START)
             goToMenuItem(menuItem.itemId)
             true
+        }
+
+        toggleBtn.setOnCheckedChangeListener { compoundButton, toggled ->
+            homeVM.toggleMarkers(toggled)
         }
 
         // Opens "fragment_map" when the user logs in
@@ -174,20 +185,15 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private fun attachFragment(fragment: Fragment?, tag: String) {
         val manager = supportFragmentManager
         val ft = manager.beginTransaction()
-        if (tag == "splash_screen") { // May not keep this part of the code, used for the splash screen
-            ft.add(R.id.fragment_container, fragment!!, "splash_screen")
+        if (manager.findFragmentByTag(tag) == null) {
+            ft.add(R.id.fragment_container, fragment!!, tag)
+            ft.addToBackStack(tag)
             ft.commit()
         } else {
-            if (manager.findFragmentByTag(tag) == null) {
-                ft.add(R.id.fragment_container, fragment!!, tag)
-                ft.addToBackStack(tag)
-                ft.commit()
-            } else {
-                for (frag in manager.fragments) {
-                    ft.hide(frag)
-                }
-                ft.show(manager.findFragmentByTag(tag)!!).commit()
+            for (frag in manager.fragments) {
+                ft.hide(frag)
             }
+            ft.show(manager.findFragmentByTag(tag)!!).commit()
         }
     }
 
@@ -274,28 +280,11 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
      * @see goToLogin
      * @see [FirebaseAuth.getCurrentUser]
      */
-    override fun onResume() {
-        super.onResume()
-        if (auth.currentUser == null) {
-            goToLogin()
-        }
-    }
-
-    /**
-     * Checking to see if there is a user currently logged in, in case this activity is
-     * reached without a user being logged in.
-     *
-     * An example of this would be if a user's account is deleted before logging out through
-     * the app.
-     *
-     * @see goToLogin
-     * @see [FirebaseAuth.getCurrentUser]
-     */
     override fun onStart() {
         super.onStart()
         if (auth.currentUser == null) {
             goToLogin()
-        } else homeVM.cacheUsersFoundPlantList()
+        }
     }
 
     /**
@@ -313,15 +302,5 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
         finish()
-    }
-
-    /**
-     * Physically removing the observer on the user's *number of plants found*.
-     *
-     * @see [HomeViewModel.getTheNumOfPlants]
-     */
-    override fun onDestroy() {
-        super.onDestroy()
-        homeVM.getTheNumOfPlants.removeObserver(numPlantsObserver)
     }
 }

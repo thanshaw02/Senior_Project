@@ -6,7 +6,12 @@
 
 package com.example.forager.fragments
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -14,14 +19,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
+import com.bumptech.glide.Glide
 import com.example.forager.R
+import com.example.forager.activities.FileDirectory
 import com.example.forager.remotedata.model.User
 import com.example.forager.activities.login.LoginActivity
 import com.example.forager.viewmodel.HomeViewModel
 import com.google.android.material.snackbar.Snackbar
+import java.io.File
 
 
 private const val LOG = "FragmentProfileMenu:"
@@ -37,11 +48,15 @@ class FragmentProfileMenu : Fragment() {
     private lateinit var currentUser: User
 
     // setting up all variables needed
+    private lateinit var profilePicture: ImageView
     private lateinit var usersName: TextView
     private lateinit var usersUsername: TextView
     private lateinit var usersEmail: TextView
     private lateinit var dateAccountCreated: TextView
     private lateinit var deleteAccountBtn: Button
+
+    private lateinit var photoDir: File
+    private lateinit var fileDir: FileDirectory
 
     // ViewModel
     /**
@@ -49,6 +64,28 @@ class FragmentProfileMenu : Fragment() {
      * @see com.example.forager.MapsActivity
      */
     private val homeVM: HomeViewModel by activityViewModels()
+
+    // For choosing a profile picture from the user's photo gallery
+    // Trying to updating the menu heading profile picture to, but not working lol
+    private val resultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            Log.d(LOG, "Result: $result")
+            if (result.resultCode == Activity.RESULT_OK) {
+                homeVM.updateProfilePicture(result.data!!.data!!)
+                Glide.with(this).load(result.data!!.data).into(profilePicture)
+            } else {
+                Snackbar.make(
+                    requireView(),
+                    "The photo was not properly received.",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        fileDir = context as FileDirectory
+    }
 
     /**
      * On create function
@@ -72,15 +109,31 @@ class FragmentProfileMenu : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_profile_menu, container, false)
-        Log.d(LOG, "onCreateView() called")
+
+        photoDir = fileDir.getOutputDirectory(homeVM.getCurrentDate())
 
         usersName = view.findViewById(R.id.fullName_tv)
         usersUsername = view.findViewById(R.id.username_tv)
         usersEmail = view.findViewById(R.id.email_tv)
         dateAccountCreated = view.findViewById(R.id.dateCreated_tv)
         deleteAccountBtn = view.findViewById(R.id.delete_account_btn)
+        profilePicture = view.findViewById(R.id.profile_picture)
 
         setViewData()
+
+        profilePicture.setOnClickListener {
+            val pickPhotoIntent = Intent(
+                Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            )
+            val fileProvider = FileProvider.getUriForFile(
+                requireContext(),
+                "com.example.forager.fragments.file_provider",
+                photoDir
+            )
+            pickPhotoIntent.apply { putExtra(MediaStore.EXTRA_OUTPUT, fileProvider) }
+            resultLauncher.launch(pickPhotoIntent)
+        }
 
         // Issue is here, for some reason I cannot delete the user and the user's plant list from the alert box..
         deleteAccountBtn.setOnClickListener {

@@ -8,6 +8,7 @@ package com.example.forager.viewmodel
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
 import com.example.forager.localdata.model.Plant
@@ -24,6 +25,7 @@ import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,30 +41,23 @@ private const val LOG = "HomeViewModel"
  */
 class HomeViewModel : ViewModel() {
 
+    private val profilePicture: MutableLiveData<Uri> = MutableLiveData()
+    val getProfilePicture: LiveData<Uri> get() = profilePicture
+
+    fun updateProfilePicture(photoUri: Uri) {
+        Log.d(LOG, "This is called right? Uri: $photoUri")
+        profilePicture.value = photoUri
+    }
+
+    // Boolean for camera capabilities
+    var hasCamera: Boolean? = null
+
     /* Used for searching both Local Data and Remote Data */
 
     fun searchForPlantLocally(query: String): MutableList<Plant> {
-        return DataRepository.getLocalPlantData.filter { plant ->
+        return getLocalPlantData.filter { plant ->
             plant.commonName.lowercase().contains(query.lowercase())
         } as MutableList<Plant>
-    }
-
-    fun searchForPlantRemotely(query: String): MutableList<PlantListNode> {
-        return personalPlantList.filter { plantNode ->
-            plantNode.plantAdded.commonName.lowercase().contains(query.lowercase())
-        } as MutableList<PlantListNode>
-    }
-
-    private val personalPlantList: MutableList<PlantListNode> = mutableListOf()
-    val getPersonalPlantList: List<PlantListNode> get() = personalPlantList
-
-    fun cacheUsersFoundPlantList() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val dataResponse = DataRepository.getResponseFromDB()
-            if (dataResponse.exception == null) {
-                personalPlantList.addAll(dataResponse.plants!!)
-            }
-        }
     }
 
     /* Local Data Operations */
@@ -114,7 +109,7 @@ class HomeViewModel : ViewModel() {
      *
      * @author Tylor J. Hanshaw
      */
-    // This is how I want to add a plant to the database, by creating the PlantListNode in the ViewModel, NOT the View
+    // Called if the user's device does not have a camera
     fun addPlantToDB(
         latLng: LatLng,
         plantToAdd: Plant,
@@ -131,7 +126,6 @@ class HomeViewModel : ViewModel() {
             plantNodeUid
         )
         DataRepository.addPlantLocation(newNode)
-        personalPlantList.add(newNode) // Adding new plants to the locally list
         newPlantListNode.postValue(newNode)
     }
 
@@ -145,7 +139,9 @@ class HomeViewModel : ViewModel() {
      * @author Tylor J. Hanshaw
      */
     fun removePlantFromDB(plantToRemove: PlantListNode) {
-        DataRepository.removePlantFromDB(plantToRemove.getUID())
+        viewModelScope.launch(Dispatchers.IO) {
+            DataRepository.removePlantFromDB(plantToRemove.getUID())
+        }
     }
 
     // These two functions and LiveData incrementing and decrementing the user's number of plants found
@@ -216,15 +212,9 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    // LiveData that updates when a new node is added to the database,
+    // specifically a new node with a URL pointing to its associated photo
     val waitForNewNodeAdded: LiveData<PlantListNode> = DataRepository.getPlantAddedToDB
-
-//    val getPhotoUrl = liveData(Dispatchers.IO) {
-//
-//    }
-
-//    fun getUrlForPlantPhoto(plantUid: String): LiveData<PlantListNode> {
-//        return DataRepository.getUrlForPlantPhoto(plantUid)
-//    }
 
     /**
      * Used in *PersonalPlantFragment* when a plant is swiped left and removed.
@@ -424,9 +414,7 @@ class HomeViewModel : ViewModel() {
      * @param toggled [Boolean]
      */
     fun toggleMarkers(toggled: Boolean) {
-        var count = 0
         plantsFoundMarkers.forEach { marker ->
-            Log.d(LOG, "Marker #${count++}: $marker")
             marker.isVisible = toggled
         }
     }

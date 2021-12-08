@@ -120,18 +120,22 @@ dependencies {
     // Coroutines from stackoverflow
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.2.1"
 
-    // Splash screen dependency
-    implementation 'androidx.core:core-splashscreen:1.0.0-alpha02'
-
-    // Lottie dependency for splash screen
-    implementation 'com.airbnb.android:lottie:3.7.0'
-
-    // CircleImageView dependency, someone made this on GitHub and looked cool
-    // https://github.com/hdodenhof/CircleImageView
-    implementation 'de.hdodenhof:circleimageview:3.1.0'
-
     // Glide dependency, used to load images quicker and smoother
     implementation 'com.github.bumptech.glide:glide:4.12.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
+
+    // For developers using AndroidX in their applications
+    // Used to access and tune permissions as needed
+    implementation 'pub.devrel:easypermissions:3.0.0'
+
+    // GoogleMap places dependency
+    implementation 'com.google.android.libraries.places:places:2.5.0'
+
+    // GoogleMap places dependency and locations
+    implementation 'com.google.android.libraries.places:places:2.5.0'
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
+
+    // Circle ImageView dependency
+    implementation 'de.hdodenhof:circleimageview:3.1.0'
 
 }

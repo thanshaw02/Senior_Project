@@ -108,13 +108,14 @@ class PersonalPlantListFragment : Fragment() {
 
         // this allows the user's found plant list to be fully loaded in on log-in
         homeVM.observeFoundPlantList.observe(requireActivity(), { response ->
+            Log.d(LOG, "This should fire once, plants have eben loaded in.")
             personalPlantAdaptor = PersonalPlantListAdapter(response.plants!!)
         })
 
         // This works! I am now storing the URL of the photo taken
         // Instead of storing the file path in Firebase Storage the URL will just load it up directly
         homeVM.waitForNewNodeAdded.observe(requireActivity(), { node ->
-            Log.d(LOG, "New node has been added to the RecyclerView.")
+            Log.d(LOG, "New PlantListNode: $node")
             personalPlantAdaptor!!.updateRecyclerView(node)
         })
 
