@@ -119,18 +119,18 @@ object DataRepository {
             userStorageRef.putFile(photoUri).addOnCompleteListener { result ->
                 if (result.isSuccessful) {
                     userStorageRef.downloadUrl.addOnCompleteListener {
-                        if(it.isSuccessful) {
+                        if (it.isSuccessful) {
                             val photoUrl = it.result
                             nodeToAdd.setPlantPhotoUriNode(photoUrl.toString())
-                            plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(nodeToAdd.getUID())
+                            plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid)
+                                .child(nodeToAdd.getUID())
                                 .setValue(nodeToAdd).addOnCompleteListener {
-                                    if(it.isSuccessful) plantAddedToDB.value = nodeToAdd
+                                    if (it.isSuccessful) plantAddedToDB.value = nodeToAdd
                                     else Log.e(LOG, "Something went wrong.. horribly wrong.")
                                 }
                         }
                     }
-                }
-                else Log.e(LOG, "Photo file URI unsuccessfully added to Cloud Storage")
+                } else Log.e(LOG, "Photo file URI unsuccessfully added to Cloud Storage")
             }.await()
         }
     }
@@ -236,8 +236,14 @@ object DataRepository {
         withContext(Dispatchers.IO) {
             plantsFoundDBRef.child(firebaseAuth.currentUser!!.uid).child(uid).removeValue()
                 .addOnCompleteListener {
-                    if (it.isSuccessful) Log.d(LOG, "Removed plant successfully! Plant uid was: $uid")
-                    else Log.d(LOG, "Was not successful in removing the plant with the uid of: $uid")
+                    if (it.isSuccessful) Log.d(
+                        LOG,
+                        "Removed plant successfully! Plant uid was: $uid"
+                    )
+                    else Log.d(
+                        LOG,
+                        "Was not successful in removing the plant with the uid of: $uid"
+                    )
                 }
         }
     }
@@ -282,20 +288,55 @@ object DataRepository {
                 }.await()
         }
 
+    private val observeUsernameChangesRepo: MutableLiveData<String> = MutableLiveData()
+    val getObservedUsernameChangesRepo: LiveData<String> get() = observeUsernameChangesRepo
+
+
+    suspend fun reAuthenticateUserForUpdates(
+        currentEmail: String,
+        currentPassword: String,
+        newUsername: String,
+        newEmail: String,
+        newPassword: String
+    ) {
+        withContext(Dispatchers.IO) {
+            firebaseAuth.currentUser!!.reauthenticate(
+                EmailAuthProvider.getCredential(
+                    currentEmail,
+                    currentPassword
+                )).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    observeUsernameChangesRepo.value = newUsername
+                    userDBRef.child(firebaseAuth.currentUser!!.uid).child("userName")
+                        .setValue(newUsername).addOnSuccessListener {
+                            Log.d(LOG, "Successfully updated users username.")
+                        }
+                    firebaseAuth.currentUser!!.updateEmail(newEmail).addOnSuccessListener {
+                        Log.d(LOG, "Successfully updated user's email.")
+                    }
+                    firebaseAuth.currentUser!!.updatePassword(newPassword).addOnSuccessListener {
+                        Log.d(LOG, "Successfully updated the user's password.")
+                    }
+                }
+            }
+        }
+    }
+
     // Trying to remove the use info all in one suspend function here
-    suspend fun reAuthenticateUser(email: String, password: String) {
+    suspend fun reAuthenticateUserForDeletion(email: String, password: String) {
         withContext(Dispatchers.IO) {
             firebaseAuth.currentUser!!.reauthenticate(
                 EmailAuthProvider.getCredential(
                     email,
                     password
-                )).addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        Log.d(LOG, "Successfully delete the user's auth account.")
-                        deleteUserAuth()
-                        signOut()
-                    } else Log.d(LOG, "Failed to re-authenticate user.")
-                }
+                )
+            ).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    Log.d(LOG, "Successfully delete the user's auth account.")
+                    deleteUserAuth()
+                    signOut()
+                } else Log.d(LOG, "Failed to re-authenticate user.")
+            }
         }
     }
 

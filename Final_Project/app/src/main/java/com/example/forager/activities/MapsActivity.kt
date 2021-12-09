@@ -71,6 +71,7 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private lateinit var menuLayout: DrawerLayout
     private var menuNavView: NavigationView? = null
     private lateinit var profilePicture: ImageView
+    private lateinit var menuHeaderUserName: TextView
 
     // Creating an instance of FriebaseAuth which will hold on to whoever has logged in
     private lateinit var auth: FirebaseAuth
@@ -104,6 +105,8 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         menuNavView = binding.myNavigationView
         val toolBar = binding.navBar
 
+        menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+
         // This uses coroutines to set the logged in user's info
         setUsersInfoWindow()
 
@@ -133,6 +136,11 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         // Opens "fragment_map" when the user logs in
         attachFragment(MapsFragment.newInstance(), "fragment_map")
 
+        homeVM.getObservedUsernameChanges.observe(this, {
+            Log.d(LOG, "Changed username through LiveData: $it")
+            menuHeaderUserName.text = it
+        })
+
     }
 
     /**
@@ -149,9 +157,9 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
             if (response.user != null) {
                 currentUser = response.user!!
                 numPlantsFound = currentUser.numPlantsFound.toString()
-                menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+//                menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
                 val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
-                val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
+                menuHeaderUserName = findViewById(R.id.user_username)
                 menuHeaderFullName.text = auth.currentUser!!.displayName
                 menuHeaderUserName.text = currentUser.userName
                 menuHeaderPlantsFound.text = currentUser.numPlantsFound.toString()

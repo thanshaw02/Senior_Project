@@ -31,8 +31,15 @@ import com.example.forager.activities.FileDirectory
 import com.example.forager.remotedata.model.User
 import com.example.forager.activities.login.LoginActivity
 import com.example.forager.viewmodel.HomeViewModel
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.ktx.Firebase
 import java.io.File
 
 
@@ -56,6 +63,7 @@ class FragmentProfileMenu : Fragment() {
     private lateinit var usersEmail: TextView
     private lateinit var dateAccountCreated: TextView
     private lateinit var deleteAccountBtn: Button
+    private lateinit var editAccount: Button
 
     private lateinit var photoDir: File
     private lateinit var fileDir: FileDirectory
@@ -66,23 +74,6 @@ class FragmentProfileMenu : Fragment() {
      * @see com.example.forager.MapsActivity
      */
     private val homeVM: HomeViewModel by activityViewModels()
-
-    // For choosing a profile picture from the user's photo gallery
-    // Trying to updating the menu heading profile picture to, but not working lol
-    private val resultLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            Log.d(LOG, "Result: $result")
-            if (result.resultCode == Activity.RESULT_OK) {
-                homeVM.updateProfilePicture(result.data!!.data!!)
-                Glide.with(this).load(result.data!!.data).into(profilePicture)
-            } else {
-                Snackbar.make(
-                    requireView(),
-                    "The photo was not properly received.",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-            }
-        }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -112,6 +103,8 @@ class FragmentProfileMenu : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_profile_menu, container, false)
 
+        editAccount = view.findViewById(R.id.edit_account_btn)
+
         photoDir = fileDir.getOutputDirectory(homeVM.getCurrentDate())
 
         usersFullName = view.findViewById(R.id.fullName_tv)
@@ -124,25 +117,58 @@ class FragmentProfileMenu : Fragment() {
         setViewData()
 
         profilePicture.setOnClickListener {
-            val pickPhotoIntent = Intent(
-                Intent.ACTION_PICK,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            )
-            val fileProvider = FileProvider.getUriForFile(
-                requireContext(),
-                "com.example.forager.fragments.file_provider",
-                photoDir
-            )
-            pickPhotoIntent.apply { putExtra(MediaStore.EXTRA_OUTPUT, fileProvider) }
-            resultLauncher.launch(pickPhotoIntent)
+            // Allow user to change their profile picture
         }
 
         // Issue is here, for some reason I cannot delete the user and the user's plant list from the alert box..
         deleteAccountBtn.setOnClickListener {
-            setDialog(view)
+            setDialogDeleteAccount(view)
         }
 
+        editAccount.setOnClickListener {
+            setDialogEditAccount(view)
+        }
+
+        homeVM.getObservedUsernameChanges.observe(requireActivity(), {
+            Log.d(LOG, "Changed username through LiveData: $it")
+            usersUsername.text = it
+            usersEmail.text = auth!!.email
+            Log.d(LOG, auth.email.toString())
+        })
+
         return view
+    }
+
+    private fun setDialogEditAccount(view: View) {
+        val layout = layoutInflater.inflate(R.layout.edit_account_layout, null)
+        val usernameET = layout.findViewById<EditText>(R.id.edit_username_ET)
+        val emailET = layout.findViewById<EditText>(R.id.edit_email_ET)
+        val currentPassword = layout.findViewById<EditText>(R.id.current_password)
+        val firstAttemptPassword = layout.findViewById<EditText>(R.id.change_password_first_attempt)
+        val secondAttemptPassword = layout.findViewById<EditText>(R.id.change_password_second_attempt)
+
+        val editAccountDialogBox = AlertDialog.Builder(requireContext())
+            .setCancelable(true)
+            .setView(layout)
+            .setPositiveButton("Submit") {dialog, i ->
+                if(firstAttemptPassword.text.toString() ==
+                        secondAttemptPassword.text.toString()) {
+                    homeVM.updateUserData(
+                        auth!!.email!!,
+                        currentPassword.text.toString(),
+                        usernameET.text.toString(),
+                        emailET.text.toString(),
+                        firstAttemptPassword.text.toString()
+                    )
+                }
+                else {
+                    Snackbar.make(
+                        requireView(),
+                        "New passwords do not match, try again.",
+                        Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        editAccountDialogBox.show()
     }
 
     // Leaving this comment here, deleting the user's account still causes issues
@@ -152,10 +178,7 @@ class FragmentProfileMenu : Fragment() {
      *
      * @param view View needed for the Snackbar text in the case the user enters incorrect login credentials.
      */
-    // TODO: There is still a bug with the "Delete User Data" Firebase extension
-    // TODO: Seems to only be deleting users info from one of the two nodes
-    // TODO: And seems to be only deleting the first in the the "Realtime Database paths" list..
-    private fun setDialog(view: View) {
+    private fun setDialogDeleteAccount(view: View) {
         val layout = layoutInflater.inflate(R.layout.user_delete_account_alert_box, null)
         val alertBox = AlertDialog.Builder(requireContext())
         alertBox.setTitle("Please enter your credentials: ")

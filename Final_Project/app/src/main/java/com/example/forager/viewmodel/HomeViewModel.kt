@@ -25,6 +25,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.forager_navigation_header.view.*
 import kotlinx.coroutines.*
@@ -46,6 +49,8 @@ private const val LOG = "HomeViewModel"
  * @author Tylor J. Hanshaw
  */
 class HomeViewModel : ViewModel() {
+
+    private val auth = FirebaseAuth.getInstance()
 
     private val profilePicture: MutableLiveData<Uri> = MutableLiveData()
     val getProfilePicture: LiveData<Uri> get() = profilePicture
@@ -96,8 +101,6 @@ class HomeViewModel : ViewModel() {
      */
 
     /**********************************************************************************************/
-
-    private val auth = FirebaseAuth.getInstance()
 
     // These two functions and LiveData handle adding or removing a plant from/to the database
     private val newPlantListNode: MutableLiveData<PlantListNode> = MutableLiveData()
@@ -275,8 +278,29 @@ class HomeViewModel : ViewModel() {
      */
     fun deleteUserAccount(email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            DataRepository.reAuthenticateUser(email, password)
+            DataRepository.reAuthenticateUserForDeletion(email, password)
             //logout()
+        }
+    }
+
+    val getObservedUsernameChanges: LiveData<String> get() = DataRepository.getObservedUsernameChangesRepo
+
+    fun updateUserData(
+        currentEmail: String,
+        currentPassword: String,
+        newUsername: String,
+        newEmail: String,
+        newPassword: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            DataRepository.reAuthenticateUserForUpdates(
+                currentEmail,
+                currentPassword,
+                newUsername,
+                newEmail,
+                newPassword
+            )
+            DataRepository.getUserInfo()
         }
     }
 
@@ -326,6 +350,10 @@ class HomeViewModel : ViewModel() {
      */
     val observeUserInfo = liveData(Dispatchers.IO) {
         emit(DataRepository.getUserInfo())
+    }
+
+    fun initGetUserInfo() {
+        viewModelScope.launch(Dispatchers.IO) { DataRepository.getUserInfo() }
     }
 
 

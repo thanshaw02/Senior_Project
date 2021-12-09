@@ -20,10 +20,6 @@ import com.google.firebase.ktx.Firebase
 import java.text.DateFormat
 import java.util.*
 
-/******************************************************************************************************************************************************
- *  TODO: Change the stroke colo of the input boxes (looks pretty weird still)                                                                        *
-*******************************************************************************************************************************************************/
-
 private const val TAG = "RegisterActivity:"
 
 class RegisterActivity : AppCompatActivity() {
@@ -58,8 +54,7 @@ class RegisterActivity : AppCompatActivity() {
 
         auth = Firebase.auth
 
-        // Check to see if the password is at least 6 characters long!!
-        // TODO: Right now the user can register and go to the home screen without entering valid register data
+        // Password must be >=6 characters long, FirebaseAuth enforces this
         binding.registerBtn.setOnClickListener {
             if((fullNameET.text.isNotEmpty() && usernameET.text.isNotEmpty()) && (emailET.text.isNotEmpty() && passwordET.text.isNotEmpty())) {
                 registerNewUser(usernameET.text.toString(), fullNameET.text.toString(), emailET.text.toString(), passwordET.text.toString())
