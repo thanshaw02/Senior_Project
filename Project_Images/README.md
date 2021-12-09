@@ -148,5 +148,8 @@ https://free-images.com/display/plants_22687_eupatorium_perfoliatum.html
 Vector asset citations:
 
 Profile menu background asset:
-<a href="https://www.freepik.com/vectors/background">Background vector created by freepik - www.freepik.com</a>
+
+
+cardCornerRadius = @dimen/cardview_default_radius => 2dp     cardElevation = @dimen/cardview_default_elevation => 2dp     
+cardMaxElevation = @dimen/cardview_default_elevation => 2dp     cardPreventCornerOverlap = true     cardUseCompatPadding = false
 

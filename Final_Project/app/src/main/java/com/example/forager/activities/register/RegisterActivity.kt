@@ -68,7 +68,7 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         // Need to close this activity, otherwise it will still be running in the background until the app is fully closed
-        binding.textView12.setOnClickListener {
+        binding.backToLogin.setOnClickListener {
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             finish()

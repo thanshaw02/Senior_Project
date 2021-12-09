@@ -61,20 +61,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        oneTapClient = Identity.getSignInClient(this)
-        signInRequest = BeginSignInRequest.builder()
-            .setPasswordRequestOptions(BeginSignInRequest.PasswordRequestOptions.builder()
-                .setSupported(true)
-                .build())
-            .setGoogleIdTokenRequestOptions(
-                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    .setServerClientId(getString(R.string.google_web_client_id)) // My Google server client ID
-                    .setFilterByAuthorizedAccounts(true) // Showing accounts that have signed in before
-                    .build())
-            .setAutoSelectEnabled(true)
-            .build()
-
         // Initializing my FirebaseAuth variable
         auth = Firebase.auth
         firebaseAnalytics = Firebase.analytics
@@ -102,22 +88,36 @@ class LoginActivity : AppCompatActivity() {
         }
 
         // Signing in via google auth
-        binding.loginGoogle.setOnClickListener {
-            oneTapClient.beginSignIn(signInRequest)
-                .addOnSuccessListener(this) { result ->
-                    try {
-                        startIntentSenderForResult(
-                            result.pendingIntent.intentSender, REQ_ONE_TAP,
-                            null, 0, 0, 0, null)
-                    } catch (e: IntentSender.SendIntentException) {
-                        Log.e(LOG, "Couldn't start One Tap UI: ${e.localizedMessage}")
-                    }
-                }
-                .addOnFailureListener(this) { e ->
-                    // The user does not have a Google account registered with my app!
-                    Log.d(LOG, e.localizedMessage!!)
-                }
-        }
+        // SCRAPPING THINGS FOR MY PRESENTATION
+//        binding.loginGoogle.setOnClickListener {
+//            oneTapClient.beginSignIn(signInRequest)
+//                .addOnSuccessListener(this) { result ->
+//                    try {
+//                        startIntentSenderForResult(
+//                            result.pendingIntent.intentSender, REQ_ONE_TAP,
+//                            null, 0, 0, 0, null)
+//                    } catch (e: IntentSender.SendIntentException) {
+//                        Log.e(LOG, "Couldn't start One Tap UI: ${e.localizedMessage}")
+//                    }
+//                }
+//                .addOnFailureListener(this) { e ->
+//                    // The user does not have a Google account registered with my app!
+//                    Log.d(LOG, e.localizedMessage!!)
+//                }
+//        }
+//        oneTapClient = Identity.getSignInClient(this)
+//        signInRequest = BeginSignInRequest.builder()
+//            .setPasswordRequestOptions(BeginSignInRequest.PasswordRequestOptions.builder()
+//                .setSupported(true)
+//                .build())
+//            .setGoogleIdTokenRequestOptions(
+//                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+//                    .setSupported(true)
+//                    .setServerClientId(getString(R.string.google_web_client_id)) // My Google server client ID
+//                    .setFilterByAuthorizedAccounts(true) // Showing accounts that have signed in before
+//                    .build())
+//            .setAutoSelectEnabled(true)
+//            .build()
     }
 
     companion object {
@@ -165,6 +165,21 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
+    private fun goToHomeScreen() {
+        val intent = MapsActivity.newInstance(this, signInMethod!!)
+        startActivity(intent)
+    }
+
+    // Check if someone has already signed in with Google OR Facebook
+    // Need to add the googleUser here to pass to the main map activity
+    override fun onStart() {
+        super.onStart()
+        val currentUser = auth.currentUser
+        if ((currentUser != null)) {
+            goToHomeScreen()
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
@@ -204,21 +219,6 @@ class LoginActivity : AppCompatActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun goToHomeScreen() {
-        val intent = MapsActivity.newInstance(this, signInMethod!!)
-        startActivity(intent)
-    }
-
-    // Check if someone has already signed in with Google OR Facebook
-    // Need to add the googleUser here to pass to the main map activity
-    override fun onStart() {
-        super.onStart()
-        val currentUser = auth.currentUser
-        if ((currentUser != null)) {
-            goToHomeScreen()
         }
     }
 }

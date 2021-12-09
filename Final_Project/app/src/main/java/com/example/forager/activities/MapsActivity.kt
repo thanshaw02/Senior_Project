@@ -77,8 +77,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private lateinit var currentUser: User
     private lateinit var numPlantsFound: String
 
-    private var signInMethod: Int? = null
-
     private val numPlantsObserver = Observer<String> {
         numPlantsFound = it
     }
@@ -90,10 +88,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // If the user has signed in using Google and it is their first time signing in,
-        // I will prompt them to enter a username for their account.
-        signInMethod = intent?.getIntExtra(SIGN_IN_METHOD, -1)
 
         // This is for keep my app in "full screen" mode
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -151,27 +145,18 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
      * @author Tylor J. Hanshaw
      */
     private fun setUsersInfoWindow() {
-        if(signInMethod == 1) {
-            // Signed in using username and password
-            homeVM.observeUserInfo.observe(this, { response ->
-                if (response.user != null) {
-                    currentUser = response.user!!
-                    numPlantsFound = currentUser.numPlantsFound.toString()
-                    menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
-                    val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
-                    val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
-                    menuHeaderFullName.text = auth.currentUser!!.displayName
-                    menuHeaderUserName.text = currentUser.userName
-                    menuHeaderPlantsFound.text = currentUser.numPlantsFound.toString()
-                } else Log.e(LOG, "Error retrieving user's data: ${response.exception}")
-            })
-        }
-        else if(signInMethod == 2) {
-//            val doesUserHaveAccount = homeVM.checkForUserAccount()
-//            if(!doesUserHaveAccount) {
-//                // Prompt user to create a username, then add an account in my RealtimeDatabase
-//            }
-        }
+        homeVM.observeUserInfo.observe(this, { response ->
+            if (response.user != null) {
+                currentUser = response.user!!
+                numPlantsFound = currentUser.numPlantsFound.toString()
+                menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+                val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
+                val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
+                menuHeaderFullName.text = auth.currentUser!!.displayName
+                menuHeaderUserName.text = currentUser.userName
+                menuHeaderPlantsFound.text = currentUser.numPlantsFound.toString()
+            } else Log.e(LOG, "Error retrieving user's data: ${response.exception}")
+        })
     }
 
     // Utility function for creating a file directory for photos taken
@@ -294,6 +279,7 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     override fun onStart() {
         super.onStart()
         if (auth.currentUser == null) {
+            Log.d(LOG, "User is logged in via Google.")
             goToLogin()
         }
     }
