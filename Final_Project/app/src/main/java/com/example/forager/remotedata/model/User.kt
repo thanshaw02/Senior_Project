@@ -21,8 +21,6 @@ package com.example.forager.remotedata.model
  */
 data class User(
     var userName: String? = null,
-    val fullName: String? = null,
-    var email: String? = null,
     val dateCreated: String? = null,
     var numPlantsFound: Int = 0
 )

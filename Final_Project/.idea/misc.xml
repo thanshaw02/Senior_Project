@@ -3,10 +3,13 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/tylor/.gradle/caches/transforms-3/a6b476349e21ecb57a4cad328c85ff0a/transformed/jetified-facebook-share-4.41.0/res/drawable/com_facebook_button_send_background.xml" value="0.2657894736842105" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/add_icon.xml" value="0.3181818181818182" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/button2.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/button_selector.xml" value="0.3310810810810811" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/circle_ui.xml" value="0.3223684210526316" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/cirlce_ui.xml" value="0.3223684210526316" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/expand_down.xml" value="0.21486486486486486" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/genaric_button_style.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/genaric_button_style_dark.xml" value="0.22792792792792793" />
@@ -29,10 +32,13 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/search_plant_menu_icon.xml" value="0.38513513513513514" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/show_password_icon.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/splash_background.xml" value="0.20855855855855857" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/square_ui.xml" value="0.3223684210526316" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/toggle_off_markers.xml" value="0.3223684210526316" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/transparent_background.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ui_background.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ui_background_list.xml" value="0.3310810810810811" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/ui_background_list_item.xml" value="0.3310810810810811" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/drawable/user_profile_menu_icon.xml" value="0.3223684210526316" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout-v23/fragment_plant.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_camera.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_login.xml" value="0.3171171171171171" />
@@ -45,26 +51,28 @@
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_single_plant_from_db.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_single_plant_from_user.xml" value="0.24954954954954955" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/activity_splash_screen.xml" value="0.22612612612612612" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/background_view.xml" value="0.33" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/bottom_nav_layout.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/custom_map_marker_snippet.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/detailed_plant_list_node_view.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/forager_navigation_drawer.xml" value="0.3087719298245614" />
-        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/forager_navigation_header.xml" value="0.3087719298245614" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/forager_navigation_header.xml" value="0.33" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_add_plant.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_camera.xml" value="0.36140350877192984" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_found_plant_form.xml" value="0.264" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_groups.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_inform_user_of_logout.xml" value="0.281981981981982" />
-        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_maps.xml" value="0.21981981981981982" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_maps.xml" value="0.33" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_open_splash_screen.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_personal_plant_list.xml" value="0.37117117117117115" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_plant.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_plant_database.xml" value="0.25" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_plant_list.xml" value="0.36666666666666664" />
-        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_profile_menu.xml" value="0.3171171171171171" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_profile_menu.xml" value="0.33" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_single_plant_from_data_base.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/fragment_splash_screen.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/list_item_plant.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/lists_background_view.xml" value="0.3087719298245614" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/personal_single_plant_card.xml" value="0.4" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/single_plant_card.xml" value="0.3171171171171171" />
         <entry key="..\:/Users/tylor/OneDrive/Desktop/CS_480/Final_Project/app/src/main/res/layout/single_plant_image_view.xml" value="0.3087719298245614" />

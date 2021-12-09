@@ -23,6 +23,7 @@
         android:text="Sign In"
         android:textColor="@color/black"
         android:textSize="30sp"
+        android:translationZ="90dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -30,10 +31,11 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/editTextEmailAddress_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-        android:layout_width="300dp"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
         android:hint="Email"
+        android:translationZ="90dp"
         app:boxStrokeColor="@color/com_facebook_likeview_text_color"
         app:helperText="Email*"
         app:helperTextTextColor="@color/error_red"
@@ -52,10 +54,11 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/editTextPassword_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-        android:layout_width="300dp"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:hint="Password"
+        android:translationZ="90dp"
         app:boxStrokeColor="@color/com_facebook_likeview_text_color"
         app:endIconMode="password_toggle"
         app:helperText="Password*"
@@ -83,6 +86,7 @@
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="13sp"
+        android:translationZ="90dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextPassword_layout" />
@@ -91,84 +95,64 @@
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="50dp"
         android:text="- OR -"
+        android:translationZ="90dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/login_btn" />
-
-    <TextView
-        android:id="@+id/sign_in_options_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="Sign in with"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
     <ImageButton
         android:id="@+id/login_google"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="40dp"
         android:layout_marginEnd="140dp"
         android:background="#0000"
         android:src="@drawable/reg_google_icon"
+        android:translationZ="90dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sign_in_options_tv" />
+        app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
     <ImageButton
         android:id="@+id/login_facebook"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="140dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="40dp"
         android:background="#0000"
         android:src="@drawable/reg_facebook_icon"
+        android:translationZ="90dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sign_in_options_tv" />
+        app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
     <TextView
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="100dp"
-        android:layout_marginBottom="25dp"
+        android:layout_marginTop="30dp"
         android:text="Don\'t have an account?"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:translationZ="90dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/login_facebook" />
 
     <TextView
         android:id="@+id/create_account"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:layout_marginBottom="25dp"
+        android:layout_marginTop="30dp"
         android:text="Sign up"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textView3" />
+        android:translationZ="90dp"
+        app:layout_constraintStart_toEndOf="@+id/textView3"
+        app:layout_constraintTop_toBottomOf="@+id/login_google" />
+
+    <include
+        layout="@layout/background_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="-115dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--
-    ID's:
-
-    - editTextTextPassword
-    - editTextTextEmailAddress
-
-    == This is for a loading animation ==
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/login_loading"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:lottie_loop="true"
-        app:lottie_speed="1"
-        tools:ignore="ContentDescription"/>
--->

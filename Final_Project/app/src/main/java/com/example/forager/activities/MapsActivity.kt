@@ -45,6 +45,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.switchmaterial.SwitchMaterial
 import java.io.File
+import kotlin.math.sign
 
 private const val LOG = "MapsActivityDEBUG"
 
@@ -64,7 +65,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private lateinit var menuHeaderPlantsFound: TextView
     private lateinit var menuTitle: TextView
     private lateinit var binding: ActivityMapsBinding
-    private lateinit var toggleBtn: SwitchMaterial
 
     // Menu widgets
     private var navHeader: ForagerNavigationHeaderBinding? = null
@@ -77,6 +77,8 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     private lateinit var currentUser: User
     private lateinit var numPlantsFound: String
 
+    private var signInMethod: Int? = null
+
     private val numPlantsObserver = Observer<String> {
         numPlantsFound = it
     }
@@ -84,11 +86,14 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     // ViewModel
     private val homeVM by viewModels<HomeViewModel>()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // If the user has signed in using Google and it is their first time signing in,
+        // I will prompt them to enter a username for their account.
+        signInMethod = intent?.getIntExtra(SIGN_IN_METHOD, -1)
 
         // This is for keep my app in "full screen" mode
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -101,11 +106,9 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
 
         // Menu drawer logic
         navHeader = ForagerNavigationHeaderBinding.inflate(layoutInflater)
-        profilePicture = navHeader!!.userProfilePicture
         menuLayout = binding.drawerLayout
         menuNavView = binding.myNavigationView
         val toolBar = binding.navBar
-        toggleBtn = findViewById(R.id.toggle_markers)
 
         // This uses coroutines to set the logged in user's info
         setUsersInfoWindow()
@@ -133,10 +136,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
             true
         }
 
-        toggleBtn.setOnCheckedChangeListener { compoundButton, toggled ->
-            homeVM.toggleMarkers(toggled)
-        }
-
         // Opens "fragment_map" when the user logs in
         attachFragment(MapsFragment.newInstance(), "fragment_map")
 
@@ -152,18 +151,27 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
      * @author Tylor J. Hanshaw
      */
     private fun setUsersInfoWindow() {
-        homeVM.observeUserInfo.observe(this, { response ->
-            if (response.user != null) {
-                currentUser = response.user!!
-                numPlantsFound = currentUser.numPlantsFound.toString()
-                menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
-                val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
-                val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
-                menuHeaderFullName.text = currentUser.fullName
-                menuHeaderUserName.text = currentUser.userName
-                menuHeaderPlantsFound.text = currentUser.numPlantsFound.toString()
-            } else Log.e(LOG, "Error retrieving user's data: ${response.exception}")
-        })
+        if(signInMethod == 1) {
+            // Signed in using username and password
+            homeVM.observeUserInfo.observe(this, { response ->
+                if (response.user != null) {
+                    currentUser = response.user!!
+                    numPlantsFound = currentUser.numPlantsFound.toString()
+                    menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+                    val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
+                    val menuHeaderUserName = findViewById<TextView>(R.id.user_username)
+                    menuHeaderFullName.text = auth.currentUser!!.displayName
+                    menuHeaderUserName.text = currentUser.userName
+                    menuHeaderPlantsFound.text = currentUser.numPlantsFound.toString()
+                } else Log.e(LOG, "Error retrieving user's data: ${response.exception}")
+            })
+        }
+        else if(signInMethod == 2) {
+//            val doesUserHaveAccount = homeVM.checkForUserAccount()
+//            if(!doesUserHaveAccount) {
+//                // Prompt user to create a username, then add an account in my RealtimeDatabase
+//            }
+        }
     }
 
     // Utility function for creating a file directory for photos taken
@@ -244,6 +252,7 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     }
 
     companion object {
+        const val SIGN_IN_METHOD = "com.example.forager.sign_in_method"
         /**
          * Use this companion object to create an intent for MainActivity
          *
@@ -252,7 +261,9 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
          *
          * @author Tylor J. Hanshaw
          */
-        fun newInstance(context: Context): Intent = Intent(context, MapsActivity::class.java)
+        fun newInstance(context: Context, signInMethod: Int): Intent = Intent(context, MapsActivity::class.java).apply {
+            putExtra(SIGN_IN_METHOD, signInMethod)
+        }
     }
 
     /**

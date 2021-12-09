@@ -136,10 +136,10 @@ object DataRepository {
     }
 
     // Physically deleting the photo associated with the removed plant from Firebase Storage
-    suspend fun deletePlantPhotoFromCloudStorage(plantPhotoUrl: String) {
+    suspend fun deletePlantPhotoFromCloudStorage(plantPhotoUid: String) {
         withContext(Dispatchers.IO) {
-            firebaseStorage.child(plantPhotoUrl).delete()
-                .addOnCompleteListener {
+            personalPlantImageStorageRef.child(firebaseAuth.currentUser!!.uid)
+                .child(plantPhotoUid).delete().addOnCompleteListener {
                     if (it.isSuccessful) Log.d(LOG, "Photo was successfully removed.")
                     else Log.e(LOG, "Photo was not removed.")
                 }
@@ -206,21 +206,6 @@ object DataRepository {
             userResponse.exception = ex
         }
         return userResponse
-    }
-
-    fun getUsersFullName(callback: MyCallback) {
-        userDBRef.child(firebaseAuth.currentUser!!.uid).child("fullName").get()
-            .addOnCompleteListener {
-                val response = StringDataResponse()
-                if (it.isSuccessful) {
-                    val result = it.result
-                    response.data = result.value.toString()
-                    callback.getDataFromDB(response)
-                } else {
-                    response.exception = it.exception
-                    callback.getDataFromDB(response)
-                }
-            }
     }
 
     /**

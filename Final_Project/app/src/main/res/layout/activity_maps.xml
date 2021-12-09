@@ -39,16 +39,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/toggle_markers"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:layout_marginStart="200dp"
-                    android:theme="@style/SwitchThemeHome"
-                    map:layout_constraintStart_toStartOf="parent"
-                    map:layout_constraintTop_toTopOf="parent" />
-
             </com.google.android.material.appbar.MaterialToolbar>
 
         </com.google.android.material.appbar.AppBarLayout>
@@ -69,11 +59,11 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/my_navigation_view"
-        android:layout_width="200dp"
+        android:layout_width="250dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:layout_marginTop="23dp"
-        android:background="@color/soft_background"
+        android:background="@color/secondaryLightColor"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/forager_navigation_header"
         app:menu="@menu/forager_navigation_items" />

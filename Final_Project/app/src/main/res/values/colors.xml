@@ -13,6 +13,11 @@
     <color name="error_red">#FF9494</color>
     <color name="eggshell">#f0ead6</color>
 
+    <color name="com_facebook_button_background_color_focused_disabled">@color/primaryColor</color>
+    <color name="com_facebook_button_background_color_focused">@color/primaryLightColor</color>
+    <color name="com_facebook_button_send_background_color_pressed">@color/secondaryDarkColor</color>
+    <color name="com_facebook_button_border_color_focused">@color/secondaryLightColor</color>
+
     <!-- Theme colors -->
     <!--?xml version="1.0" encoding="UTF-8"?-->
     <color name="primaryColor">#aade9a</color>

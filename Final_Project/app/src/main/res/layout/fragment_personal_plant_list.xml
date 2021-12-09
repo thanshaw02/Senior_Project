@@ -12,11 +12,12 @@
         android:id="@+id/list_constraint"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:translationZ="90dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:fitsSystemWindows="true">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/personal_plants_RV"
@@ -34,16 +35,32 @@
             android:id="@+id/no_plants_found"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:elevation="10dp"
             android:padding="10dp"
             android:text="Looks like you haven't found any plants yet.."
             android:textAlignment="center"
             android:textSize="20sp"
             android:textStyle="italic"
+            android:translationZ="90dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/no_plants_shader"
+            android:layout_width="220dp"
+            android:layout_height="150dp"
+            android:background="@drawable/square_ui"
+            android:alpha="0.4"
+            android:elevation="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include layout="@layout/lists_background_view"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

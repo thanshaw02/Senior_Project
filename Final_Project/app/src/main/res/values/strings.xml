@@ -16,7 +16,7 @@
     <string name="fb_login_protocol_scheme">fb252661716867108</string>
 
     <!-- Google login strings -->
-    <string name="google_web_client_id">186648171890-it4nk3eh9bavjttjc7j7v3go5mqbgsli.apps.googleusercontent.com</string>
+    <string name="google_web_client_id">186648171890-7mjij4c6kdgnebs2e9sn9gumuav8cfcv.apps.googleusercontent.com</string>
 
     <!-- Bottom navigation menu items -->
     <string name="profile">Profile</string>
@@ -27,4 +27,6 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="search_plants">Search Plants</string>
     <string name="my_plants">My Plants</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="edit_account">Edit Account</string>
 </resources>

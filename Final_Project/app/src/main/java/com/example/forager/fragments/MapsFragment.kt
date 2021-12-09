@@ -50,6 +50,7 @@ class MapsFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     private lateinit var fileDir: FileDirectory
     private var numPlantsFound = 0
     private lateinit var myLocation: FusedLocationProviderClient
+    private lateinit var toggleBtn: SwitchMaterial
     private val homeVM by activityViewModels<HomeViewModel>()
 
     // For camera operations
@@ -99,6 +100,7 @@ class MapsFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     // Loads all previous plants found onto the map as markers
     private fun getResponseUsingCoroutine(googleMap: GoogleMap) {
         homeVM.observeFoundPlantList.observe(this, { response ->
+            Log.d(LOG, "New plant in MapsFragment: ${response.plants}")
             response.plants?.forEach { plantNode ->
                 val coords = LatLng(plantNode.lat, plantNode.long)
                 val marker = googleMap.addMarker(
@@ -198,7 +200,12 @@ class MapsFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_maps, container, false)
 
+        toggleBtn = view.findViewById(R.id.toggle_markers)
         photoDir = fileDir.getOutputDirectory(homeVM.getCurrentDate())
+
+        toggleBtn.setOnCheckedChangeListener { compoundButton, toggled ->
+            homeVM.toggleMarkers(toggled)
+        }
 
         // Getting the user's number of plants found count so I can increment it when adding another plant
         /* Made some changes here, I casted the variable passed by the callback and checked for exceptions */

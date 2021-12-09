@@ -6,11 +6,13 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
+import com.bumptech.glide.load.engine.executor.GlideExecutor.UncaughtThrowableStrategy.LOG
 import com.example.forager.activities.MapsActivity
 import com.example.forager.remotedata.model.User
 import com.example.forager.databinding.ActivityRegisterBinding
 import com.example.forager.activities.login.LoginActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
@@ -76,7 +78,7 @@ class RegisterActivity : AppCompatActivity() {
 
     // Come back to this, try to consolidate code into one place instead of throwing it everywhere
     private fun goToHomeScreen() {
-        val intent = MapsActivity.newInstance(this)
+        val intent = MapsActivity.newInstance(this, 1)
         startActivity(intent)
     }
 
@@ -89,16 +91,22 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerNewUser(username: String, firstName: String, email: String, password: String) {
+    private fun registerNewUser(username: String, fullName: String, email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if(task.isSuccessful) {
                     // User was created successfully and also has been signed in
                     Log.d(TAG, "createUserWithEmail:success")
                     val user = auth.currentUser
-                    writeNewUser(user!!.uid, username, firstName, email)
-                    goToHomeScreen()
-                    finish()
+                    val updateProfile = UserProfileChangeRequest.Builder()
+                        .setDisplayName(fullName).build()
+                    user!!.updateProfile(updateProfile).addOnCompleteListener {
+                        if(it.isSuccessful) {
+                            Log.d(TAG, "User has been authenticated and full name updated.")
+                            writeNewUser(user.uid, username)
+                            goToHomeScreen()
+                        }
+                    }
                 }
                 else {
                     // If user account could not be created
@@ -109,11 +117,11 @@ class RegisterActivity : AppCompatActivity() {
             }
     }
 
-    private fun writeNewUser(userID: String, username: String, firstName: String, email: String) {
+    private fun writeNewUser(userID: String, username: String) {
         // Getting the current date to write to my Realtime Database
         val currentDate = Calendar.getInstance().time
         val formattedDate = DateFormat.getDateInstance(DateFormat.FULL).format(currentDate)
-        newUser = User(username, firstName, email, formattedDate)
+        newUser = User(username, formattedDate)
         database.child("Users").child(userID).setValue(newUser)
     }
 }

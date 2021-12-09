@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/soft_background"
-    tools:context=".fragments.PlantDatabaseFragment"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    tools:context=".fragments.PlantDatabaseFragment">
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/search_bar_local_plants"
@@ -16,9 +16,12 @@
         android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="10dp"
+        android:translationZ="90dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+        <!--        app:boxStrokeColor="@color/light_gray"-->
+        <!--        app:hintTextColor="@color/light_gray"-->
 
         <EditText
             android:id="@+id/search_plants_ET"
@@ -36,8 +39,10 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:background="@color/light_gray"
-        app:layout_constraintTop_toBottomOf="@+id/search_bar_local_plants"
-        app:layout_constraintBottom_toTopOf="@+id/plant_database_RV" />
+
+        android:translationZ="90dp"
+        app:layout_constraintBottom_toTopOf="@+id/plant_database_RV"
+        app:layout_constraintTop_toBottomOf="@+id/search_bar_local_plants" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/plant_database_RV"
@@ -46,8 +51,11 @@
         android:layout_marginTop="75dp"
         android:paddingTop="5dp"
         android:paddingBottom="5dp"
+        android:translationZ="90dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <include layout="@layout/lists_background_view" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,30 +2,23 @@ package com.example.forager.fragments
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextUtils
-import android.text.TextWatcher
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.forager.R
 import com.example.forager.databinding.SinglePlantImageViewBinding
+import com.example.forager.misc.ImageUtil
 import com.example.forager.remotedata.model.PlantListNode
 import com.example.forager.repository.MyCallback
 import com.example.forager.viewmodel.HomeViewModel
@@ -83,12 +76,15 @@ class PersonalPlantListFragment : Fragment() {
                 val response = plantsFound as String?
                 if (response != null) {
                     val noPlants = view.findViewById<TextView>(R.id.no_plants_found)
+                    val noPlantsShader = view.findViewById<View>(R.id.no_plants_shader)
                     numPlantsFound = plantsFound.toString().toInt()
                     if (numPlantsFound == 0) {
                         recyclerView.visibility = View.GONE
+                        noPlantsShader.visibility = View.VISIBLE
                         noPlants.visibility = View.VISIBLE
                     } else {
                         recyclerView.visibility = View.VISIBLE
+                        noPlantsShader.visibility = View.GONE
                         noPlants.visibility = View.GONE
                     }
                 } else Log.d(LOG, "Exception when retrieving data from database.")
@@ -104,7 +100,7 @@ class PersonalPlantListFragment : Fragment() {
 
         // This observes any changes made to my "getNewPlantListNode" LiveData
         // See above for the associated Observer
-        //homeVM.getNewPlantListNode.observeForever(observer)
+        homeVM.getNewPlantListNode.observe(requireActivity(), observer)
 
         // this allows the user's found plant list to be fully loaded in on log-in
         homeVM.observeFoundPlantList.observe(requireActivity(), { response ->
@@ -114,10 +110,10 @@ class PersonalPlantListFragment : Fragment() {
 
         // This works! I am now storing the URL of the photo taken
         // Instead of storing the file path in Firebase Storage the URL will just load it up directly
-        homeVM.waitForNewNodeAdded.observe(requireActivity(), { node ->
-            Log.d(LOG, "New PlantListNode: $node")
-            personalPlantAdaptor!!.updateRecyclerView(node)
-        })
+//        homeVM.waitForNewNodeAdded.observe(requireActivity(), { node ->
+//            Log.d(LOG, "New PlantListNode: $node")
+//            personalPlantAdaptor!!.updateRecyclerView(node)
+//        })
 
         ItemTouchHelper(personalPlantAdaptor!!.itemTouchHelper).attachToRecyclerView(recyclerView)
 
@@ -170,10 +166,7 @@ class PersonalPlantListFragment : Fragment() {
             commonName.text = plantNode!!.plantAdded.commonName
             scientificName.text = homeVM.checkNameLengths(plantNode.plantAdded)
 
-            // New way of getting the plant photo using Glide and storing the photo URI in the PlantListNode
-            Glide.with(this@PersonalPlantListFragment).load(plantNode.plantPhotoUri)
-                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-                .into(plantPhoto)
+            ImageUtil.loadImagesWithFlair(requireContext(), plantNode.plantPhotoUri!!, plantPhoto)
 
             cardItemView.singleCardView.setOnClickListener {
                 // Opens up a dialog box with all of the information of the given plant displayed
@@ -193,8 +186,11 @@ class PersonalPlantListFragment : Fragment() {
                 layout.findViewById<TextView>(R.id.date_found_ET).text = plantNode.dateFound
                 layout.findViewById<TextView>(R.id.users_notes_AREA).text = plantNode.plantNotes
 
-                Glide.with(this@PersonalPlantListFragment).load(plantNode.plantPhotoUri)
-                    .into(layout.findViewById(R.id.plant_photo_expanded))
+                ImageUtil.loadImagesWithFlair(
+                    requireContext(),
+                    plantNode.plantPhotoUri!!,
+                    layout.findViewById(R.id.plant_photo_expanded)
+                )
 
                 val infoBox = AlertDialog.Builder(requireContext())
                 infoBox.setCancelable(true).setView(layout)
@@ -284,10 +280,10 @@ class PersonalPlantListFragment : Fragment() {
                  * @author Tylor J. Hanshaw
                  */
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    val plantPhotoUrl =
-                        personalPlantList[viewHolder.bindingAdapterPosition].plantPhotoUri
+                    val plantPhotoUid =
+                        personalPlantList[viewHolder.bindingAdapterPosition].getUID()
                     val plantToRemove = personalPlantList[viewHolder.bindingAdapterPosition]
-                    homeVM.removePlantPhotoFromCloudStorage(plantPhotoUrl)
+                    homeVM.removePlantPhotoFromCloudStorage(plantPhotoUid)
                     homeVM.removePlantFromDB(personalPlantList[viewHolder.bindingAdapterPosition])
                     personalPlantList.removeAt(viewHolder.bindingAdapterPosition)
                     personalPlantAdaptor!!.notifyItemRangeRemoved(

@@ -28,7 +28,7 @@ class PlantsDatabaseHelper(val context: Context) :
      * @see DB_NAME
      */
     companion object {
-        private const val DB_VERSION = 1
+        private const val DB_VERSION = 2
         const val DB_NAME = "Internal_Plant_DB_PHOTOS.db"
     }
 

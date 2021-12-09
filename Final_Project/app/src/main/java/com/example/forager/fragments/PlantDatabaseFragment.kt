@@ -1,30 +1,23 @@
 package com.example.forager.fragments
 
 import android.app.AlertDialog
-import android.content.Context
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.*
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.forager.R
 import com.example.forager.databinding.SinglePlantImageViewBinding
-import com.example.forager.fragments.PersonalPlantListFragment.Companion.newInstance
 import com.example.forager.localdata.model.Plant
-import com.example.forager.repository.MyCallback
+import com.example.forager.misc.ImageUtil
 import com.example.forager.viewmodel.HomeViewModel
 
 private const val LOG = "PlantDatabaseFragment:"
@@ -104,16 +97,20 @@ class PlantDatabaseFragment : Fragment() {
             commonName.text = plant!!.commonName
             scientificName.text = homeVM.checkNameLengths(plant)
 
-            // Using Glide to load in the photo associated with this plant
-            // "diskCacheStrategy(DiskCacheStrategy.RESOURCE)" means the photo is being cached locally
-            // And I'm loading the image into "plantImage"
-            Glide.with(this@PlantDatabaseFragment).load(plant.getPlantPhotoUri())
-                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-                .into(plantImage)
+            ImageUtil.loadImagesWithFlair(
+                requireContext(),
+                plant.getPlantPhotoUri()!!,
+                plantImage
+            )
 
             cardItemView.singleCardView.setOnClickListener {
                 val layout = layoutInflater.inflate(R.layout.detailed_plant_list_node_view, null)
                 val expandedPlantPhoto = layout.findViewById<ImageView>(R.id.plant_photo_expanded)
+
+                val layoutParamsImage = expandedPlantPhoto.layoutParams as ConstraintLayout.LayoutParams
+                layoutParamsImage.setMargins(5, 210, 5, 10)
+                expandedPlantPhoto.layoutParams = layoutParamsImage
+
                 layout.findViewById<TextView>(R.id.common_name).text = plant.commonName
                 layout.findViewById<TextView>(R.id.scientific_name).text = plant.scientificName
                 layout.findViewById<TextView>(R.id.plant_type_specific).text =
@@ -122,8 +119,11 @@ class PlantDatabaseFragment : Fragment() {
                 layout.findViewById<TextView>(R.id.plant_sun_specific).text = plant.sun
                 layout.findViewById<TextView>(R.id.plant_height_specific).text = plant.height
 
-                Glide.with(this@PlantDatabaseFragment).load(plant.getPlantPhotoUri())
-                    .into(expandedPlantPhoto)
+                ImageUtil.loadImagesWithFlair(
+                    requireContext(),
+                    plant.getPlantPhotoUri()!!,
+                    expandedPlantPhoto
+                )
 
                 // Hiding the data only needed for found plants
                 layout.findViewById<TextView>(R.id.date_found).visibility = View.GONE

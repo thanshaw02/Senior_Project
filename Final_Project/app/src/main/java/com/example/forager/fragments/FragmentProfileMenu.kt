@@ -32,6 +32,7 @@ import com.example.forager.remotedata.model.User
 import com.example.forager.activities.login.LoginActivity
 import com.example.forager.viewmodel.HomeViewModel
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import java.io.File
 
 
@@ -46,10 +47,11 @@ class FragmentProfileMenu : Fragment() {
 
     // User data passed from "MapsActivity"
     private lateinit var currentUser: User
+    private val auth = FirebaseAuth.getInstance().currentUser
 
     // setting up all variables needed
     private lateinit var profilePicture: ImageView
-    private lateinit var usersName: TextView
+    private lateinit var usersFullName: TextView
     private lateinit var usersUsername: TextView
     private lateinit var usersEmail: TextView
     private lateinit var dateAccountCreated: TextView
@@ -112,7 +114,7 @@ class FragmentProfileMenu : Fragment() {
 
         photoDir = fileDir.getOutputDirectory(homeVM.getCurrentDate())
 
-        usersName = view.findViewById(R.id.fullName_tv)
+        usersFullName = view.findViewById(R.id.fullName_tv)
         usersUsername = view.findViewById(R.id.username_tv)
         usersEmail = view.findViewById(R.id.email_tv)
         dateAccountCreated = view.findViewById(R.id.dateCreated_tv)
@@ -192,9 +194,9 @@ class FragmentProfileMenu : Fragment() {
      * @see FragmentProfileMenu for more information on its use.
      */
     private fun setViewData() {
-        usersName.text = currentUser.fullName
+        usersFullName.text = auth!!.displayName
         usersUsername.text = currentUser.userName
-        usersEmail.text = currentUser.email
+        usersEmail.text = auth.email
         dateAccountCreated.text = currentUser.dateCreated
     }
 
