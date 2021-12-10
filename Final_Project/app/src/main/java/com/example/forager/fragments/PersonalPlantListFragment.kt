@@ -27,6 +27,14 @@ import com.google.android.material.behavior.SwipeDismissBehavior.SWIPE_DIRECTION
 
 private const val LOG = "PersonalPlantListFragment"
 
+// One small bug to note here, any plants that are found and added to the user's personal plant list
+// do not currently display in the RecyclerView until the user navigates to this fragment.
+// This is due to how I observe data, I have an observer that's listening for any new plants, but
+// that observer can't observe anything until this fragment is navigated to. The fix isn't too hard,
+// I can have an observer in my MapsActivity and that will sort of queue any new plants added, then I
+// use that data to populate the RecyclerView. But I didn't have time to address the issue, it will
+// be fixed in coming versions of the Forager. So stay tuned!
+
 /**
  * PersonalPlantListFragment that displays the user's list of found plants,
  * uses a RecyclerView to display this list.
@@ -107,13 +115,6 @@ class PersonalPlantListFragment : Fragment() {
             Log.d(LOG, "This should fire once, plants have eben loaded in.")
             personalPlantAdaptor = PersonalPlantListAdapter(response.plants!!)
         })
-
-        // This works! I am now storing the URL of the photo taken
-        // Instead of storing the file path in Firebase Storage the URL will just load it up directly
-//        homeVM.waitForNewNodeAdded.observe(requireActivity(), { node ->
-//            Log.d(LOG, "New PlantListNode: $node")
-//            personalPlantAdaptor!!.updateRecyclerView(node)
-//        })
 
         ItemTouchHelper(personalPlantAdaptor!!.itemTouchHelper).attachToRecyclerView(recyclerView)
 

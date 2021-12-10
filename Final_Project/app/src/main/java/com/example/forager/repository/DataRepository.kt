@@ -39,7 +39,6 @@ private const val LOG = "DataRepository:"
  *
  * @author Tylor J. Hanshaw
  */
-// This is where I talk to my Realtime Database, authy, and my SQLite database
 object DataRepository {
 
 
@@ -264,29 +263,11 @@ object DataRepository {
 
 
 //                                              LOGIN/REGISTER CODE BELOW
-//    /***************************************************************************************************************************/
+//    /********************************************************************************************/
 
     fun signOut() {
         firebaseAuth.signOut()
     }
-
-    suspend fun singInWithEmail(act: Activity, email: String, password: String) =
-        withContext(Dispatchers.IO) {
-            firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(act) { task ->
-                    if (task.isSuccessful) {
-                        // Updates the UI here
-                        // Moves the user to the map portion of the app with their account information
-                        Log.d(LOG, "signedInWithEmail:success")
-                        val user = firebaseAuth.currentUser
-                        //goToHomeScreen(user!!)
-//                    homeVM.getUserInfoAsync()
-                    } else {
-                        // Sign in failed, entered wrong information
-                        Log.w(LOG, "signedInWithEmail:failure", task.exception)
-                    }
-                }.await()
-        }
 
     private val observeUsernameChangesRepo: MutableLiveData<String> = MutableLiveData()
     val getObservedUsernameChangesRepo: LiveData<String> get() = observeUsernameChangesRepo
@@ -304,7 +285,8 @@ object DataRepository {
                 EmailAuthProvider.getCredential(
                     currentEmail,
                     currentPassword
-                )).addOnCompleteListener {
+                )
+            ).addOnCompleteListener {
                 if (it.isSuccessful) {
                     observeUsernameChangesRepo.value = newUsername
                     userDBRef.child(firebaseAuth.currentUser!!.uid).child("userName")
@@ -323,6 +305,10 @@ object DataRepository {
     }
 
     // Trying to remove the use info all in one suspend function here
+    // I'm using a "Firebase Function" here in the server side, what it does it detects when a user's
+    // Authentication credentials are deleted, if that happens all data associated with that user
+    // (I specify this in the Firebase Console) are removed. This can include data in Firebase Storage,
+    // photos of plants in my case, and my Realtime Database.
     suspend fun reAuthenticateUserForDeletion(email: String, password: String) {
         withContext(Dispatchers.IO) {
             firebaseAuth.currentUser!!.reauthenticate(

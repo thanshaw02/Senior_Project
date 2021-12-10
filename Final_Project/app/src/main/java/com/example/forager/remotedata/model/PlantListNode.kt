@@ -9,8 +9,9 @@ import java.util.*
  * Data class that holds data pertaining to plants the user has found and added to their personal
  * plant list. Similar to the [Plant] data class, but this data class holds the latitude and
  * longitude corresponding to where the user found the plant on the map. Nested within is an instance
- * of plant object, the date the plant was found on, and personal notes about the user's find if
- * they leave any.
+ * of plant object, the date the plant was found on, personal notes about the user's find if
+ * they leave any, a photo URL that points to the photo taken by the user, and the [PlantListNode]'s
+ * UUID.
  *
  * @see getUID
  * @see setUID

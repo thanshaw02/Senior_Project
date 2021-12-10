@@ -42,15 +42,18 @@ class LoginActivity : AppCompatActivity() {
     private var signInMethod: Int? = null
 
     // Firebase analytics instance
+    // Used for logging app crashes and other stats like data usage, user retention, etc.
     private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     private lateinit var binding: ActivityLoginBinding
 
-    // Two input fields
     // Come back to this, use these two variables instead of raw binding calls
     private lateinit var emailText: EditText
     private lateinit var passwordText: EditText
 
+    // These variables were used for logging in using Google, the process is not hard but it's
+    // very tedious and you have to deal with certain API keys you request from Google online.
+    // This will be implemented in the future!
     private lateinit var oneTapClient: SignInClient
     private lateinit var signInRequest: BeginSignInRequest
     private val REQ_ONE_TAP = 2  // Can be any integer unique to the Activity
@@ -81,74 +84,17 @@ class LoginActivity : AppCompatActivity() {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
-
-        // Come back to this, setting up Facebook login
-        binding.loginFacebook.setOnClickListener {
-            // This will not work, come back in a couple weeks
-        }
-
-        // Signing in via google auth
-        // SCRAPPING THINGS FOR MY PRESENTATION
-//        binding.loginGoogle.setOnClickListener {
-//            oneTapClient.beginSignIn(signInRequest)
-//                .addOnSuccessListener(this) { result ->
-//                    try {
-//                        startIntentSenderForResult(
-//                            result.pendingIntent.intentSender, REQ_ONE_TAP,
-//                            null, 0, 0, 0, null)
-//                    } catch (e: IntentSender.SendIntentException) {
-//                        Log.e(LOG, "Couldn't start One Tap UI: ${e.localizedMessage}")
-//                    }
-//                }
-//                .addOnFailureListener(this) { e ->
-//                    // The user does not have a Google account registered with my app!
-//                    Log.d(LOG, e.localizedMessage!!)
-//                }
-//        }
-//        oneTapClient = Identity.getSignInClient(this)
-//        signInRequest = BeginSignInRequest.builder()
-//            .setPasswordRequestOptions(BeginSignInRequest.PasswordRequestOptions.builder()
-//                .setSupported(true)
-//                .build())
-//            .setGoogleIdTokenRequestOptions(
-//                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-//                    .setSupported(true)
-//                    .setServerClientId(getString(R.string.google_web_client_id)) // My Google server client ID
-//                    .setFilterByAuthorizedAccounts(true) // Showing accounts that have signed in before
-//                    .build())
-//            .setAutoSelectEnabled(true)
-//            .build()
     }
 
     companion object {
         // This is a simple intent method, if I need to add extras make sure to add them as parameters and then add them to the intent
-        fun newInstance(context: Context): Intent {
-            return Intent(context, LoginActivity::class.java)
-        }
+        fun newInstance(context: Context): Intent = Intent(context, LoginActivity::class.java)
     }
 
-    private fun loginInWithGoogle(idToken: String) {
-        val credentials = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credentials)
-            .addOnCompleteListener {
-                if(it.isSuccessful) {
-                    Log.d(LOG, "User successfully logged in with Google!")
-                    signInMethod = 2
-                    goToHomeScreen()
-                }
-                else {
-                    Log.d(LOG, "User was not signed in successfully with Google sign in.")
-                    Toast.makeText(this, "Google authentication failed.", Toast.LENGTH_SHORT).show()
-                }
-            }
-    }
-
-    private fun signInWithFacebook() {
-
-
-    }
-
-    // Attempts to login the user with the given information
+    // I would have preferred to use my DataRepository to do all of this work, but I would have needed
+    // To move this activity and the Register activity to MapsActivity as fragments. This is due to
+    // the fact that the ViewModel is tied to an Activities lifecycle, so when these activities are
+    // destroyed all data used for them in my ViewModel is lost. Even if I were to use HomeViewModel.
     private fun signInWithEmail(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
@@ -166,7 +112,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun goToHomeScreen() {
-        val intent = MapsActivity.newInstance(this, signInMethod!!)
+        val intent = MapsActivity.newInstance(this)
         startActivity(intent)
     }
 
@@ -177,48 +123,6 @@ class LoginActivity : AppCompatActivity() {
         val currentUser = auth.currentUser
         if ((currentUser != null)) {
             goToHomeScreen()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            REQ_ONE_TAP -> {
-                try {
-                    val credential = oneTapClient.getSignInCredentialFromIntent(data)
-                    val idToken = credential.googleIdToken
-                    val username = credential.id
-                    val password = credential.password
-                    when {
-                        idToken != null -> {
-                            // Using the ID token from signing in to sign the user into my app
-                            loginInWithGoogle(idToken)
-                            Log.d(LOG, "Got ID token.")
-                        }
-                        password != null -> {
-                            // Not set up yet, but here if there is a password saved
-                            Log.d(LOG, "Got password.")
-                        }
-                        else -> {
-                            Log.d(LOG, "Something bad happened, no token!!")
-                        }
-                    }
-                } catch (e: ApiException) {
-                    when (e.statusCode) {
-                        CommonStatusCodes.CANCELED -> {
-                            Log.d(LOG, "One-tap dialog was closed.")
-                            showOneTapUI = false
-                        }
-                        CommonStatusCodes.NETWORK_ERROR -> {
-                            Log.d(LOG, "One-tap encountered a network error.")
-                        }
-                        else -> {
-                            Log.d(LOG, "Couldn't get credential from result." +
-                                    " (${e.localizedMessage})")
-                        }
-                    }
-                }
-            }
         }
     }
 }

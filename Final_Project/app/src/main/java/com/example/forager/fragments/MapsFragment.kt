@@ -53,8 +53,15 @@ class MapsFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     private lateinit var toggleBtn: SwitchMaterial
     private val homeVM by activityViewModels<HomeViewModel>()
 
-    // For camera operations
-    // This handles the returned intent from the camera activity
+    /**
+     * This replaces overriding "onActivityResult()" which is now deprecated. This handles the returned
+     * intent from taking the photo. You can also reference my XML file "file_provider.xml" in the
+     * XML directory in the "res" directory.
+     *
+     * @see com.example.forager.activities.MapsActivity.getOutputDirectory
+     *
+     * @author Tylor J. Hanshaw
+     */
     private val resultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -213,7 +220,7 @@ class MapsFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             override fun getDataFromDB(data: Any?) {
                 val response = data as String?
                 if (response != null) {
-                    numPlantsFound = data.toString().toInt()
+                    numPlantsFound = response.toString().toInt()
                 } else Log.d(LOG, "Exception when loading number of plants found.")
             }
         })

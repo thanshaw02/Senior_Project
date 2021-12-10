@@ -414,11 +414,6 @@ class HomeViewModel : ViewModel() {
         return -1
     }
 
-    fun getMarker(marker: Marker?): Marker {
-        val markerIndex = findMarker(LatLng(marker!!.position.latitude, marker.position.longitude))
-        return plantsFoundMarkers[markerIndex]
-    }
-
     /**
      * Utility function used for clearing the cached list of [Marker]'s.
      *

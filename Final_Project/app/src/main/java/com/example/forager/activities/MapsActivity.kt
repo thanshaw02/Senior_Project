@@ -105,8 +105,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         menuNavView = binding.myNavigationView
         val toolBar = binding.navBar
 
-        menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
-
         // This uses coroutines to set the logged in user's info
         setUsersInfoWindow()
 
@@ -121,7 +119,7 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
         // Initializing local data (mainly for the auto-complete feature)
         homeVM.localDataInit(this)
 
-        // Update meny header with user's information on first log-in
+        // Update menu header with user's information on first log-in
         toolBar.setNavigationOnClickListener {
             menuHeaderPlantsFound.text = numPlantsFound
             menuLayout.openDrawer(GravityCompat.START) // Opens the menu when pressed
@@ -135,11 +133,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
 
         // Opens "fragment_map" when the user logs in
         attachFragment(MapsFragment.newInstance(), "fragment_map")
-
-        homeVM.getObservedUsernameChanges.observe(this, {
-            Log.d(LOG, "Changed username through LiveData: $it")
-            menuHeaderUserName.text = it
-        })
 
     }
 
@@ -157,7 +150,7 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
             if (response.user != null) {
                 currentUser = response.user!!
                 numPlantsFound = currentUser.numPlantsFound.toString()
-//                menuHeaderPlantsFound = findViewById(R.id.user_plants_found)
+                menuHeaderPlantsFound = findViewById<TextView>(R.id.user_plants_found)
                 val menuHeaderFullName = findViewById<TextView>(R.id.user_full_name)
                 menuHeaderUserName = findViewById(R.id.user_username)
                 menuHeaderFullName.text = auth.currentUser!!.displayName
@@ -245,7 +238,6 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
     }
 
     companion object {
-        const val SIGN_IN_METHOD = "com.example.forager.sign_in_method"
         /**
          * Use this companion object to create an intent for MainActivity
          *
@@ -254,9 +246,7 @@ class MapsActivity : AppCompatActivity(), FileDirectory {
          *
          * @author Tylor J. Hanshaw
          */
-        fun newInstance(context: Context, signInMethod: Int): Intent = Intent(context, MapsActivity::class.java).apply {
-            putExtra(SIGN_IN_METHOD, signInMethod)
-        }
+        fun newInstance(context: Context): Intent = Intent(context, MapsActivity::class.java)
     }
 
     /**

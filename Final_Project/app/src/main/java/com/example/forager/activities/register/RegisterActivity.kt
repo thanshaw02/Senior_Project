@@ -73,7 +73,7 @@ class RegisterActivity : AppCompatActivity() {
 
     // Come back to this, try to consolidate code into one place instead of throwing it everywhere
     private fun goToHomeScreen() {
-        val intent = MapsActivity.newInstance(this, 1)
+        val intent = MapsActivity.newInstance(this)
         startActivity(intent)
     }
 
@@ -120,33 +120,3 @@ class RegisterActivity : AppCompatActivity() {
         database.child("Users").child(userID).setValue(newUser)
     }
 }
-
-/*
-private fun registerNewUser(username: String, firstName: String, email: String, password: String) {
-    auth.createUserWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            if(task.isSuccessful) {
-                // User was created successfully and also has been signed in
-                Log.d(TAG, "createUserWithEmail:success")
-                val user = auth.currentUser
-                writeNewUser(user!!.uid, username, firstName, email)
-                goToHomeScreen(user)
-                finish()
-            }
-            else {
-                // If user account could not be created
-                Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
-                //goToHomeScreen(null)
-            }
-        }
-}
-
-private fun writeNewUser(userID: String, username: String, firstName: String, email: String) {
-    // Getting the current date to write to my Realtime Database
-    val currentDate = Calendar.getInstance().time
-    val formattedDate = DateFormat.getDateInstance(DateFormat.FULL).format(currentDate)
-    newUser = User(username, firstName, email, formattedDate)
-    database.child("Users").child(userID).setValue(newUser)
-}
-*/

@@ -120,7 +120,6 @@ class FragmentProfileMenu : Fragment() {
             // Allow user to change their profile picture
         }
 
-        // Issue is here, for some reason I cannot delete the user and the user's plant list from the alert box..
         deleteAccountBtn.setOnClickListener {
             setDialogDeleteAccount(view)
         }
@@ -133,7 +132,6 @@ class FragmentProfileMenu : Fragment() {
             Log.d(LOG, "Changed username through LiveData: $it")
             usersUsername.text = it
             usersEmail.text = auth!!.email
-            Log.d(LOG, auth.email.toString())
         })
 
         return view

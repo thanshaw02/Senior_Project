@@ -42,7 +42,7 @@ class SplashScreenActivity : AppCompatActivity() {
 //            FirebaseAuth.getInstance().currentUser!!.delete()
             if (FirebaseAuth.getInstance().currentUser != null) {
                 Log.d(LOG, "There is a user logged in..")
-                val intent = MapsActivity.newInstance(this, 1)
+                val intent = MapsActivity.newInstance(this)
                 startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(this).toBundle())
             } else {
                 Log.d(LOG, "There is not a user logged in..")
